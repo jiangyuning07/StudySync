@@ -1,1 +1,1 @@
-# studysync
+# StudySync

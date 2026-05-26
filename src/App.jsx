@@ -105,10 +105,10 @@ function Register() {
     e.preventDefault();
     setMessage("");
 
-    if (!email.endsWith("@u.nus.edu")) {
-      setMessage("Please use your NUS email, ending with @u.nus.edu.");
-      return;
-    }
+    //if (!email.endsWith("@u.nus.edu")) {
+      //setMessage("Please use your NUS email, ending with @u.nus.edu.");
+      //return;
+    //}
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);

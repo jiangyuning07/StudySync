@@ -1,29 +1,33 @@
 import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate} from "react-router-dom";
 import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "../firebase";
+import {isValidNusEmail} from "../utils/authRules";
 
 function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState(location.state?.message || "");
+  const [showLoginHint, setShowLoginHint] = useState(false);
 
   async function handleRegister(e) {
     e.preventDefault();
     setMessage("");
+    setShowLoginHint(false);
 
-    // Previously disabled due to Firebase Auth glitches with school email
-    // Appears to be working now so restored for MS1
-    if (!email.endsWith("@u.nus.edu")) {
-      setMessage("Please use your NUS email, ending with @u.nus.edu.");
+    const cleanedEmail = email.trim();
+
+    if (!isValidNusEmail(cleanedEmail)) {
+      setMessage("Please use your NUS email in the format e0123456@u.nus.edu.");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanedEmail, password);
 
       await updateProfile(userCredential.user, {
         displayName: name,
@@ -33,13 +37,24 @@ function Register() {
 
       await addDoc(collection(db, "users"), {
         name,
-        email,
+        email: cleanedEmail,
         createdAt: serverTimestamp(),
       });
 
-      setMessage("Account created. Please check your email for verification.");
-      setTimeout(() => navigate("/"), 1500);
+      setMessage("Account created. Please check your email for verification before logging in.");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
+
+      if (error.code === "auth/email-already-in-use") {
+        setShowLoginHint(true);
+        return;
+      }
+
+      if (error.code === "auth/weak-password") {
+        setMessage("Password should be at least 6 characters.");
+        return;
+      }
+
       setMessage(error.message);
     }
   }
@@ -78,6 +93,16 @@ function Register() {
       </form>
 
       {message && <p className="message">{message}</p>}
+
+      {showLoginHint && (
+        <p className="message">
+          This email is already registered. Please{" "}
+          <Link to="/login" state={{email: email.trim()}}>
+            log in
+          </Link>{" "}
+          instead.
+        </p>
+      )}
     </main>
   );
 }

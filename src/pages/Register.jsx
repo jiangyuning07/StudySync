@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "../firebase";
+import {isValidNusEmail} from "../utils/authRules";
 
 function Register() {
   const [name, setName] = useState("");
@@ -15,15 +16,15 @@ function Register() {
     e.preventDefault();
     setMessage("");
 
-    // Previously disabled due to Firebase Auth glitches with school email
-    // Appears to be working now so restored for MS1
-    if (!email.endsWith("@u.nus.edu")) {
-      setMessage("Please use your NUS email, ending with @u.nus.edu.");
+    const cleanedEmail = email.trim();
+
+    if (!isValidNusEmail(cleanedEmail)) {
+      setMessage("Please use your NUS email in the format e0123456@u.nus.edu.");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanedEmail, password);
 
       await updateProfile(userCredential.user, {
         displayName: name,
@@ -33,12 +34,12 @@ function Register() {
 
       await addDoc(collection(db, "users"), {
         name,
-        email,
+        email: cleanedEmail,
         createdAt: serverTimestamp(),
       });
 
-      setMessage("Account created. Please check your email for verification.");
-      setTimeout(() => navigate("/"), 1500);
+      setMessage("Account created. Please check your email for verification before logging in.");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
       setMessage(error.message);
     }

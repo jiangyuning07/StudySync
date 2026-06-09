@@ -2,6 +2,7 @@ import {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "../firebase";
+import {isValidNusEmail} from "../utils/authRules";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -13,8 +14,22 @@ function Login() {
     e.preventDefault();
     setMessage("");
 
+    const cleanedEmail = email.trim();
+
+    if (!isValidNusEmail(cleanedEmail)) {
+      setMessage("Please use your NUS email in the format e0123456@u.nus.edu.");
+      return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, cleanedEmail, password);
+
+      if (!user.emailVerified) {
+        await signOut(auth);
+        setMessage("Please verify your email before logging in.");
+        return;
+      }
+
       navigate("/");
     } catch (error) {
       setMessage(error.message);

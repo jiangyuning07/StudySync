@@ -1,9 +1,11 @@
 import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
+import {isFullyVerifiedNusUser} from "../utils/authRules";
 
 function Navbar() {
   const {currentUser, logout} = useAuth();
   const navigate = useNavigate();
+  const canAccessApp = isFullyVerifiedNusUser(currentUser);
 
   async function handleLogout() {
     await logout();
@@ -15,7 +17,7 @@ function Navbar() {
       <Link to="/" className="logo">StudySync</Link>
 
       <div className="nav-links">
-        {currentUser && (
+        {canAccessApp && (
           <>
             <Link to="/spaces">Study Spaces</Link>
             <Link to="/create-session">Create Session</Link>
@@ -23,7 +25,7 @@ function Navbar() {
           </>
         )}
 
-        {!currentUser ? (
+        {!canAccessApp ? (
           <>
             <Link to="/register">Register</Link>
             <Link to="/login">Login</Link>

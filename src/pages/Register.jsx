@@ -1,20 +1,23 @@
 import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate} from "react-router-dom";
 import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "../firebase";
 import {isValidNusEmail} from "../utils/authRules";
 
 function Register() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState(location.state?.message || "");
+  const [showLoginHint, setShowLoginHint] = useState(false);
 
   async function handleRegister(e) {
     e.preventDefault();
     setMessage("");
+    setShowLoginHint(false);
 
     const cleanedEmail = email.trim();
 
@@ -41,6 +44,17 @@ function Register() {
       setMessage("Account created. Please check your email for verification before logging in.");
       setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
+
+      if (error.code === "auth/email-already-in-use") {
+        setShowLoginHint(true);
+        return;
+      }
+
+      if (error.code === "auth/weak-password") {
+        setMessage("Password should be at least 6 characters.");
+        return;
+      }
+
       setMessage(error.message);
     }
   }
@@ -79,6 +93,16 @@ function Register() {
       </form>
 
       {message && <p className="message">{message}</p>}
+
+      {showLoginHint && (
+        <p className="message">
+          This email is already registered. Please{" "}
+          <Link to="/login" state={{email: email.trim()}}>
+            log in
+          </Link>{" "}
+          instead.
+        </p>
+      )}
     </main>
   );
 }

@@ -1,18 +1,21 @@
 import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate} from "react-router-dom";
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "../firebase";
 import {isValidNusEmail} from "../utils/authRules";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [email, setEmail] = useState(location.state?.email || "");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState(location.state?.message || "");
+  const [showRegisterHint, setShowRegisterHint] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
     setMessage("");
+    setShowRegisterHint(false);
 
     const cleanedEmail = email.trim();
 
@@ -32,6 +35,12 @@ function Login() {
 
       navigate("/");
     } catch (error) {
+
+      if (error.code === "auth/invalid-credential") {
+        setShowRegisterHint(true);
+        return;
+      }
+
       setMessage(error.message);
     }
   }
@@ -62,6 +71,16 @@ function Login() {
       </form>
 
       {message && <p className="message">{message}</p>}
+
+      {showRegisterHint && (
+        <p className="message">
+          Login failed. Check your password, or{" "}
+          <Link to="/register" state={{email: email.trim()}}>
+            register
+          </Link>{" "}
+          first if you are new to StudySync.
+        </p>
+      )}
     </main>
   );
 }

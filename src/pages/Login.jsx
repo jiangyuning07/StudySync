@@ -3,6 +3,7 @@ import {Link, useLocation, useNavigate} from "react-router-dom";
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {auth} from "../firebase";
 import {isValidNusEmail} from "../utils/authRules";
+import {signInWithEmailAndPassword, signOut} from "firebase/auth";
 
 function Login() {
   const location = useLocation();
@@ -26,6 +27,7 @@ function Login() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cleanedEmail, password);
+      const user = userCredential.user;
 
       if (!user.emailVerified) {
         await signOut(auth);

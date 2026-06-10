@@ -8,6 +8,8 @@ function CreateSession() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [duration, setDuration] = useState("");
+  const [studyMode, setStudyMode] = useState("silent");
+  const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
 
@@ -17,17 +19,25 @@ function CreateSession() {
 
     try {
       await addDoc(collection(db, "sessions"), {
-        location,
+        studySpaceId: null,
+        studySpaceName: location,
         date,
         time,
         duration,
-        createdBy: currentUser.email,
+        studyMode,
+        maxParticipants: Number(maxParticipants),
+        creatorId: currentUser.uid,
+        creatorName: currentUser.displayName,
+        participants: [],
+        status: "active",
         createdAt: serverTimestamp(),
       });
       setLocation("");
       setDate("");
       setTime("");
       setDuration("");
+      setStudyMode("silent");
+      setMaxParticipants(2);
       setMessage("Session created successfully!");
     } catch (error) {
       setMessage(error.message);
@@ -68,6 +78,22 @@ function CreateSession() {
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
           placeholder="e.g. 2 hours"
+          required
+        />
+
+        <label>Study Mode</label>
+        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>
+          <option value="silent">Silent</option>
+          <option value="discussion">Discussion</option>
+        </select>
+
+        <label>Max Participants</label>
+        <input
+          value={maxParticipants}
+          onChange={(e) => setMaxParticipants(e.target.value)}
+          type="number"
+          min="2"
+          max="20"
           required
         />
 

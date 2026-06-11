@@ -23,6 +23,12 @@ function CreateSession() {
     e.preventDefault();
     setMessage("");
 
+    const today = new Date().toISOString().split("T")[0];
+    if (date < today) {
+      setMessage("Session date cannot be in the past.");
+      return;
+    }
+
     if (endTime <= startTime) {
       setMessage("End time must be after start time.");
       return;

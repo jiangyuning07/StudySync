@@ -40,8 +40,8 @@ function MySessions() {
           <div className="card" key={session.id}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
-            <p><strong>Time:</strong> {session.time}</p>
-            <p><strong>Duration:</strong> {session.duration}</p>
+            <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
+            <p><strong>Duration:</strong> {session.duration} mins</p>
             <p><strong>Study Mode:</strong> {session.studyMode}</p>
             <p><strong>Participants:</strong> {session.participants.length}/{session.maxParticipants}</p>
             <p><strong>Status:</strong> {session.status}</p>

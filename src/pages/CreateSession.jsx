@@ -6,23 +6,37 @@ import {useAuth} from "../AuthContext";
 function CreateSession() {
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [duration, setDuration] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const [studyMode, setStudyMode] = useState("silent");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
 
+  function calculateDuration(start, end) {
+    const [startH, startM] = start.split(":").map(Number);
+    const [endH, endM] = end.split(":").map(Number);
+    return (endH * 60 + endM) - (startH * 60 + startM);
+  }
+
   async function handleCreateSession(e) {
     e.preventDefault();
     setMessage("");
+
+    if (endTime <= startTime) {
+      setMessage("End time must be after start time.");
+      return;
+    }
+
+    const duration = calculateDuration(startTime, endTime);
 
     try {
       await addDoc(collection(db, "sessions"), {
         studySpaceId: null,
         studySpaceName: location,
         date,
-        time,
+        startTime,
+        endTime,
         duration,
         studyMode,
         maxParticipants: Number(maxParticipants),
@@ -34,8 +48,8 @@ function CreateSession() {
       });
       setLocation("");
       setDate("");
-      setTime("");
-      setDuration("");
+      setStartTime("");
+      setEndTime("");
       setStudyMode("silent");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
@@ -65,21 +79,27 @@ function CreateSession() {
           required
         />
 
-        <label>Time</label>
+        <label>Start Time</label>
         <input
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
           type="time"
           required
         />
 
-        <label>Duration</label>
+        <label>End Time</label>
         <input
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-          placeholder="e.g. 2 hours"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          type="time"
           required
         />
+
+        {startTime && endTime && endTime > startTime && (
+          <p className="message">
+            Duration: {calculateDuration(startTime, endTime)} minutes
+          </p>
+        )}
 
         <label>Study Mode</label>
         <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>

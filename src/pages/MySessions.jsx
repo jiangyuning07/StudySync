@@ -2,11 +2,13 @@ import {useEffect, useState} from "react";
 import {collection, query, where, getDocs, orderBy} from "firebase/firestore";
 import {db} from "../firebase";
 import {useAuth} from "../AuthContext";
+import {useNavigate} from "react-router-dom";
 
 function MySessions() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const {currentUser} = useAuth();
+  const navigate = useNavigate();
 
   async function fetchMySessions() {
     const q = query(
@@ -45,6 +47,12 @@ function MySessions() {
             <p><strong>Study Mode:</strong> {session.studyMode}</p>
             <p><strong>Participants:</strong> {session.participants.length}/{session.maxParticipants}</p>
             <p><strong>Status:</strong> {session.status}</p>
+
+            {session.status === "active" && (
+              <button onClick={() => navigate(`/sessions/${session.id}/edit`)}>
+                Edit
+              </button>
+            )}
           </div>
         ))}
       </div>

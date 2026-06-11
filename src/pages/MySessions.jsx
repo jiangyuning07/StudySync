@@ -55,7 +55,7 @@ function MySessions() {
 
       <div className="session-list">
         {sessions.map((session) => (
-          <div className="card" key={session.id}>
+          <div className="card" key={session.id} style={{opacity: session.status === "cancelled" ? 0.5 : 1}}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
             <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>

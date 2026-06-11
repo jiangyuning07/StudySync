@@ -22,6 +22,7 @@ function Navbar() {
             <Link to="/spaces">Study Spaces</Link>
             <Link to="/create-session">Create Session</Link>
             <Link to="/sessions">All Sessions</Link>
+            <Link to="/my-sessions">My Sessions</Link>
           </>
         )}
 

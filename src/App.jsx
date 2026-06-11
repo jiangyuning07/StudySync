@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import StudySpaces from "./pages/StudySpaces";
 import CreateSession from "./pages/CreateSession";
 import AllSessions from "./pages/AllSessions";
+import MySessions from "./pages/MySessions";
+import EditSession from "./pages/EditSession";
 
 function App() {
   return (
@@ -60,6 +62,22 @@ function App() {
           element={
             <ProtectedRoute>
               <AllSessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-sessions"
+          element={
+            <ProtectedRoute>
+              <MySessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sessions/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditSession />
             </ProtectedRoute>
           }
         />

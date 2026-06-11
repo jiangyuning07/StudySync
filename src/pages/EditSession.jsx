@@ -1,9 +1,14 @@
-import {useState} from "react";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {useState, useEffect} from "react";
+import {doc, getDoc, updateDoc} from "firebase/firestore";
 import {db} from "../firebase";
 import {useAuth} from "../AuthContext";
+import {useNavigate, useParams} from "react-router-dom";
 
-function CreateSession() {
+function EditSession() {
+  const {id} = useParams();
+  const {currentUser} = useAuth();
+  const navigate = useNavigate();
+
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -11,7 +16,7 @@ function CreateSession() {
   const [studyMode, setStudyMode] = useState("silent");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
-  const {currentUser} = useAuth();
+  const [loading, setLoading] = useState(true);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -19,15 +24,41 @@ function CreateSession() {
     return (endH * 60 + endM) - (startH * 60 + startM);
   }
 
-  async function handleCreateSession(e) {
+  useEffect(() => {
+    async function fetchSession() {
+      const sessionRef = doc(db, "sessions", id);
+      const sessionSnap = await getDoc(sessionRef);
+
+      if (!sessionSnap.exists()) {
+        setMessage("Session not found.");
+        setLoading(false);
+        return;
+      }
+
+      const data = sessionSnap.data();
+
+      // Prevent non-creators from accessing this page
+      if (data.creatorId !== currentUser.uid) {
+        navigate("/my-sessions");
+        return;
+      }
+
+      // Pre-fill the form with existing session data
+      setLocation(data.studySpaceName);
+      setDate(data.date);
+      setStartTime(data.startTime);
+      setEndTime(data.endTime);
+      setStudyMode(data.studyMode);
+      setMaxParticipants(data.maxParticipants);
+      setLoading(false);
+    }
+
+    fetchSession();
+  }, [id]);
+
+  async function handleEditSession(e) {
     e.preventDefault();
     setMessage("");
-
-    const today = new Date().toISOString().split("T")[0];
-    if (date < today) {
-      setMessage("Session date cannot be in the past.");
-      return;
-    }
 
     if (endTime <= startTime) {
       setMessage("End time must be after start time.");
@@ -37,8 +68,8 @@ function CreateSession() {
     const duration = calculateDuration(startTime, endTime);
 
     try {
-      await addDoc(collection(db, "sessions"), {
-        studySpaceId: null,
+      const sessionRef = doc(db, "sessions", id);
+      await updateDoc(sessionRef, {
         studySpaceName: location,
         date,
         startTime,
@@ -46,29 +77,21 @@ function CreateSession() {
         duration,
         studyMode,
         maxParticipants: Number(maxParticipants),
-        creatorId: currentUser.uid,
-        creatorName: currentUser.displayName,
-        participants: [],
-        status: "active",
-        createdAt: serverTimestamp(),
       });
-      setLocation("");
-      setDate("");
-      setStartTime("");
-      setEndTime("");
-      setStudyMode("silent");
-      setMaxParticipants(2);
-      setMessage("Session created successfully!");
+      setMessage("Session updated successfully!");
+      setTimeout(() => navigate("/my-sessions"), 1500);
     } catch (error) {
       setMessage(error.message);
     }
   }
 
+  if (loading) return <main className="page"><p>Loading...</p></main>;
+
   return (
     <main className="page">
-      <h1>Create Study Session</h1>
+      <h1>Edit Session</h1>
 
-      <form className="form" onSubmit={handleCreateSession}>
+      <form className="form" onSubmit={handleEditSession}>
         <label>Location</label>
         <input
           value={location}
@@ -123,7 +146,7 @@ function CreateSession() {
           required
         />
 
-        <button type="submit">Create Session</button>
+        <button type="submit">Save Changes</button>
       </form>
 
       {message && <p className="message">{message}</p>}
@@ -131,4 +154,4 @@ function CreateSession() {
   );
 }
 
-export default CreateSession;
+export default EditSession;

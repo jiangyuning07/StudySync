@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react";
-import {collection, query, where, getDocs, orderBy} from "firebase/firestore";
 import {db} from "../firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
+import {collection, query, where, getDocs, orderBy, doc, updateDoc} from "firebase/firestore";
 
 function MySessions() {
   const [sessions, setSessions] = useState([]);
@@ -23,6 +23,22 @@ function MySessions() {
     }));
     setSessions(sessionList);
     setLoading(false);
+  }
+
+  async function handleCancelSession(sessionId) {
+    const confirmed = window.confirm("Are you sure you want to cancel this session?");
+    if (!confirmed) return;
+
+    try {
+      const sessionRef = doc(db, "sessions", sessionId);
+      await updateDoc(sessionRef, {
+        status: "cancelled",
+      });
+      // Refresh the list after cancelling
+      fetchMySessions();
+    } catch (error) {
+      console.error("Failed to cancel session:", error);
+    }
   }
 
   useEffect(() => {
@@ -51,6 +67,12 @@ function MySessions() {
             {session.status === "active" && (
               <button onClick={() => navigate(`/sessions/${session.id}/edit`)}>
                 Edit
+              </button>
+            )}
+
+            {session.status === "active" && (
+              <button onClick={() => handleCancelSession(session.id)}>
+                Cancel Session
               </button>
             )}
           </div>

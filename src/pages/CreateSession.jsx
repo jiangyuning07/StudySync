@@ -1,10 +1,11 @@
-import {useState} from "react";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
 import {db} from "../firebase";
 import {useAuth} from "../AuthContext";
+import {addDoc, collection, serverTimestamp, getDocs} from "firebase/firestore";
+import {useState, useEffect} from "react";
 
 function CreateSession() {
-  const [location, setLocation] = useState("");
+  const [selectedSpace, setSelectedSpace] = useState("");
+  const [selectedSpaceName, setSelectedSpaceName] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -12,6 +13,19 @@ function CreateSession() {
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
+  const [studySpaces, setStudySpaces] = useState([]);
+
+  useEffect(() => {
+    async function fetchStudySpaces() {
+      const snapshot = await getDocs(collection(db, "studySpaces"));
+      const spaces = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setStudySpaces(spaces);
+    }
+    fetchStudySpaces();
+  }, []);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -38,8 +52,8 @@ function CreateSession() {
 
     try {
       await addDoc(collection(db, "sessions"), {
-        studySpaceId: null,
-        studySpaceName: location,
+        studySpaceId: selectedSpace,
+        studySpaceName: selectedSpaceName,
         date,
         startTime,
         endTime,
@@ -52,7 +66,8 @@ function CreateSession() {
         status: "active",
         createdAt: serverTimestamp(),
       });
-      setLocation("");
+      setSelectedSpace("");
+      setSelectedSpaceName("");
       setDate("");
       setStartTime("");
       setEndTime("");
@@ -70,12 +85,22 @@ function CreateSession() {
 
       <form className="form" onSubmit={handleCreateSession}>
         <label>Location</label>
-        <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g. Central Library"
+        <select
+          value={selectedSpace}
+          onChange={(e) => {
+            const selected = studySpaces.find((s) => s.id === e.target.value);
+            setSelectedSpace(selected ? selected.id : "");
+            setSelectedSpaceName(selected ? selected.name : "");
+          }}
           required
-        />
+        >
+          <option value="">Select a study space</option>
+          {studySpaces.map((space) => (
+            <option key={space.id} value={space.id}>
+              {space.name}
+            </option>
+          ))}
+        </select>
 
         <label>Date</label>
         <input

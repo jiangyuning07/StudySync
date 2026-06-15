@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
-import {db} from "../firebase";
+import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 
 function CreateSession() {

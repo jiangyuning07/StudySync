@@ -2,7 +2,7 @@ import {useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
 import {addDoc, collection, serverTimestamp} from "firebase/firestore";
-import {auth, db} from "../firebase";
+import {auth, db} from "../utils/firebase";
 import {isValidNusEmail} from "../utils/authRules";
 
 function Register() {

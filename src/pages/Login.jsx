@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
-import {auth} from "../firebase";
+import {auth} from "../utils/firebase";
 import {isValidNusEmail} from "../utils/authRules";
 import {signInWithEmailAndPassword, signOut} from "firebase/auth";
 

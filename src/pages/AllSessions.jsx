@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {collection, getDocs, query, orderBy} from "firebase/firestore";
-import {db} from "../firebase";
+import {db} from "../utils/firebase";
 
 function AllSessions() {
   const [sessions, setSessions] = useState([]);

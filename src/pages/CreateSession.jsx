@@ -37,6 +37,17 @@ function CreateSession() {
     return (endH * 60 + endM) - (startH * 60 + startM);
   }
 
+  function handleStudySpaceChange(e) {
+    const selectedId = e.target.value;
+    setStudySpaceId(selectedId);
+
+    const selectedSpace = studySpaces.find((space) => space.id === selectedId);
+
+    if (selectedSpace?.studyMode) {
+      setStudyMode(selectedSpace.studyMode);
+    }
+  }
+
   async function handleCreateSession(e) {
     e.preventDefault();
     setMessage("");
@@ -95,7 +106,7 @@ function CreateSession() {
 
       <form className="form" onSubmit={handleCreateSession}>
         <label>Study Space</label>
-        <select value={studySpaceId} onChange={(e) => setStudySpaceId(e.target.value)} required>
+        <select value={studySpaceId} onChange={handleStudySpaceChange} required>
           <option value="" disabled>Select a study space</option>
           {studySpaces.map((space) => (
             <option key={space.id} value={space.id}>

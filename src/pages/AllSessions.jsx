@@ -32,11 +32,12 @@ function AllSessions() {
       <div className="session-list">
         {sessions.map((session) => (
           <div className="card" key={session.id}>
-            <h2>{session.location}</h2>
+            <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
-            <p><strong>Time:</strong> {session.time}</p>
+            <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
             <p><strong>Duration:</strong> {session.duration}</p>
-            <p><strong>Created by:</strong> {session.createdBy}</p>
+            <p><strong>Study Mode:</strong> {session.studyMode}</p>
+            <p><strong>Created by:</strong> {session.creatorName}</p>
           </div>
         ))}
       </div>

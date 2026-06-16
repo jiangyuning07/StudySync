@@ -32,7 +32,7 @@ function MySessions() {
     try {
       const sessionRef = doc(db, "sessions", sessionId);
       await updateDoc(sessionRef, {
-        status: "cancelled",
+        status: "Cancelled",
       });
       // Refresh the list after cancelling
       fetchMySessions();
@@ -55,7 +55,7 @@ function MySessions() {
 
       <div className="session-list">
         {sessions.map((session) => (
-          <div className="card" key={session.id} style={{opacity: session.status === "cancelled" ? 0.5 : 1}}>
+          <div className="card" key={session.id} style={{opacity: session.status === "Cancelled" ? 0.5 : 1}}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
             <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
@@ -64,13 +64,13 @@ function MySessions() {
             <p><strong>Participants:</strong> {session.participants.length}/{session.maxParticipants}</p>
             <p><strong>Status:</strong> {session.status}</p>
 
-            {session.status === "active" && (
+            {session.status === "Active" && (
               <button onClick={() => navigate(`/sessions/${session.id}/edit`)}>
                 Edit
               </button>
             )}
 
-            {session.status === "active" && (
+            {session.status === "Active" && (
               <button onClick={() => handleCancelSession(session.id)}>
                 Cancel Session
               </button>

@@ -1,17 +1,35 @@
-import {useState} from "react";
-import {addDoc, collection, serverTimestamp} from "firebase/firestore";
+import {useState, useEffect} from "react";
+import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 
 function CreateSession() {
-  const [location, setLocation] = useState("");
+  const [studySpaces, setStudySpaces] = useState([]);
+  const [studySpaceId, setStudySpaceId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [studyMode, setStudyMode] = useState("silent");
+  const [studyMode, setStudyMode] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
+
+  useEffect(() => {
+    async function fetchStudySpaces() {
+      try {
+        const q = query(collection(db, "studySpaces"), orderBy("name"));
+        const snapshot = await getDocs(q);
+        const spaces = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setStudySpaces(spaces)
+      } catch (error) {
+        setMessage(error.message);
+      }
+    }
+    fetchStudySpaces();
+  }, []);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -19,9 +37,27 @@ function CreateSession() {
     return (endH * 60 + endM) - (startH * 60 + startM);
   }
 
+  function handleStudySpaceChange(e) {
+    const selectedId = e.target.value;
+    setStudySpaceId(selectedId);
+
+    const selectedSpace = studySpaces.find((space) => space.id === selectedId);
+
+    if (selectedSpace?.studyMode) {
+      setStudyMode(selectedSpace.studyMode);
+    }
+  }
+
   async function handleCreateSession(e) {
     e.preventDefault();
     setMessage("");
+
+    const selectedStudySpace = studySpaces.find((space) => space.id == studySpaceId);
+
+    if (!selectedStudySpace) {
+      setMessage("Please select a study space.");
+      return;
+    }
 
     const today = new Date().toISOString().split("T")[0];
     if (date < today) {
@@ -38,8 +74,8 @@ function CreateSession() {
 
     try {
       await addDoc(collection(db, "sessions"), {
-        studySpaceId: null,
-        studySpaceName: location,
+        studySpaceId: selectedStudySpace.id,
+        studySpaceName: selectedStudySpace.name,
         date,
         startTime,
         endTime,
@@ -52,11 +88,11 @@ function CreateSession() {
         status: "active",
         createdAt: serverTimestamp(),
       });
-      setLocation("");
+      setStudySpaceId("");
       setDate("");
       setStartTime("");
       setEndTime("");
-      setStudyMode("silent");
+      setStudyMode("");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
     } catch (error) {
@@ -69,13 +105,15 @@ function CreateSession() {
       <h1>Create Study Session</h1>
 
       <form className="form" onSubmit={handleCreateSession}>
-        <label>Location</label>
-        <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g. Central Library"
-          required
-        />
+        <label>Study Space</label>
+        <select value={studySpaceId} onChange={handleStudySpaceChange} required>
+          <option value="" disabled>Select a study space</option>
+          {studySpaces.map((space) => (
+            <option key={space.id} value={space.id}>
+              {space.name}
+            </option>
+          ))}
+        </select>
 
         <label>Date</label>
         <input
@@ -108,9 +146,11 @@ function CreateSession() {
         )}
 
         <label>Study Mode</label>
-        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>
-          <option value="silent">Silent</option>
-          <option value="discussion">Discussion</option>
+        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
+          <option value="" disabled>Select a study mode</option>
+          <option value="Silent">Silent</option>
+          <option value="Discussion">Discussion</option>
+          <option value="Both">Both</option>
         </select>
 
         <label>Max Participants</label>

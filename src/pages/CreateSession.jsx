@@ -9,7 +9,7 @@ function CreateSession() {
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [studyMode, setStudyMode] = useState("Silent");
+  const [studyMode, setStudyMode] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
@@ -81,7 +81,7 @@ function CreateSession() {
       setDate("");
       setStartTime("");
       setEndTime("");
-      setStudyMode("silent");
+      setStudyMode("");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
     } catch (error) {
@@ -96,7 +96,7 @@ function CreateSession() {
       <form className="form" onSubmit={handleCreateSession}>
         <label>Study Space</label>
         <select value={studySpaceId} onChange={(e) => setStudySpaceId(e.target.value)} required>
-          <option value="">Select a study space</option>
+          <option value="" disabled>Select a study space</option>
           {studySpaces.map((space) => (
             <option key={space.id} value={space.id}>
               {space.name}
@@ -135,9 +135,11 @@ function CreateSession() {
         )}
 
         <label>Study Mode</label>
-        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>
+        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
+          <option value="" disabled>Select a study mode</option>
           <option value="Silent">Silent</option>
           <option value="Discussion">Discussion</option>
+          <option value="Both">Both</option>
         </select>
 
         <label>Max Participants</label>

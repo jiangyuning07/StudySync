@@ -66,7 +66,7 @@ function CreateSession() {
     }
 
     if (endTime <= startTime) {
-      setMessage("End time must be after start time.");
+      setMessage("End time must be later than start time.");
       return;
     }
 
@@ -85,7 +85,7 @@ function CreateSession() {
         creatorId: currentUser.uid,
         creatorName: currentUser.displayName,
         participants: [],
-        status: "active",
+        status: "Active",
         createdAt: serverTimestamp(),
       });
       setStudySpaceId("");
@@ -102,7 +102,7 @@ function CreateSession() {
 
   return (
     <main className="page">
-      <h1>Create Study Session</h1>
+      <h1>Create a Study Session</h1>
 
       <form className="form" onSubmit={handleCreateSession}>
         <label>Study Space</label>

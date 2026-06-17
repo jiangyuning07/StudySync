@@ -1,5 +1,5 @@
 import {useState, useEffect} from "react";
-import {doc, getDoc, updateDoc} from "firebase/firestore";
+import {doc, getDoc, getDocs, updateDoc, collection, orderBy, query} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate, useParams} from "react-router-dom";
@@ -9,11 +9,12 @@ function EditSession() {
   const {currentUser} = useAuth();
   const navigate = useNavigate();
 
-  const [location, setLocation] = useState("");
+  const [studySpaces, setStudySpaces] = useState([]);
+  const [studySpaceId, setStudySpaceId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [studyMode, setStudyMode] = useState("silent");
+  const [studyMode, setStudyMode] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,44 +25,83 @@ function EditSession() {
     return (endH * 60 + endM) - (startH * 60 + startM);
   }
 
-  useEffect(() => {
-    async function fetchSession() {
-      const sessionRef = doc(db, "sessions", id);
-      const sessionSnap = await getDoc(sessionRef);
+  function handleStudySpaceChange(e) {
+    const selectedId = e.target.value;
+    setStudySpaceId(selectedId);
 
-      if (!sessionSnap.exists()) {
-        setMessage("Session not found.");
-        setLoading(false);
-        return;
-      }
+    const selectedSpace = studySpaces.find((space) => space.id === selectedId);
 
-      const data = sessionSnap.data();
-
-      // Prevent non-creators from accessing this page
-      if (data.creatorId !== currentUser.uid) {
-        navigate("/my-sessions");
-        return;
-      }
-
-      // Pre-fill the form with existing session data
-      setLocation(data.studySpaceName);
-      setDate(data.date);
-      setStartTime(data.startTime);
-      setEndTime(data.endTime);
-      setStudyMode(data.studyMode);
-      setMaxParticipants(data.maxParticipants);
-      setLoading(false);
+    if (selectedSpace?.studyMode) {
+      setStudyMode(selectedSpace.studyMode);
     }
+  }
 
-    fetchSession();
-  }, [id]);
+  useEffect(() => {
+    async function fetchStudySpacesAndSession() {
+      try {
+        const spacesQuery = query(collection(db, "studySpaces"), orderBy("name"));
+        const spacesSnapshot = await getDocs(spacesQuery);
+
+        const spaces = spacesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setStudySpaces(spaces);
+
+        const sessionRef = doc(db, "sessions", id);
+        const sessionSnap = await getDoc(sessionRef);
+
+        if (!sessionSnap.exists()) {
+          setMessage("Session not found.");
+          setLoading(false);
+          return;
+        }
+
+        const data = sessionSnap.data();
+
+        // Prevent non-creators from accessing this page
+        if (data.creatorId !== currentUser.uid) {
+          navigate("/my-sessions");
+          return;
+        }
+
+        // Pre-fill the form with existing session data
+        setStudySpaceId(data.studySpaceId || "");
+        setDate(data.date);
+        setStartTime(data.startTime);
+        setEndTime(data.endTime);
+        setStudyMode(data.studyMode || "");
+        setMaxParticipants(data.maxParticipants);
+        setLoading(false);
+      } catch (error) {
+        setMessage(error.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchStudySpacesAndSession();
+  }, [id, currentUser.uid, navigate]);
 
   async function handleEditSession(e) {
     e.preventDefault();
     setMessage("");
 
+    const selectedStudySpace = studySpaces.find((space) => space.id === studySpaceId);
+
+    if (!selectedStudySpace) {
+      setMessage("Please select a study space.");
+      return;
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    if (date < today) {
+      setMessage("Session date cannot be in the past.");
+      return;
+    }
+
     if (endTime <= startTime) {
-      setMessage("End time must be after start time.");
+      setMessage("End time must be later than start time.");
       return;
     }
 
@@ -70,7 +110,8 @@ function EditSession() {
     try {
       const sessionRef = doc(db, "sessions", id);
       await updateDoc(sessionRef, {
-        studySpaceName: location,
+        studySpaceId: selectedStudySpace.id,
+        studySpaceName: selectedStudySpace.name,
         date,
         startTime,
         endTime,
@@ -92,13 +133,15 @@ function EditSession() {
       <h1>Edit Session</h1>
 
       <form className="form" onSubmit={handleEditSession}>
-        <label>Location</label>
-        <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="e.g. Central Library"
-          required
-        />
+        <label>Study Space</label>
+        <select value={studySpaceId} onChange={handleStudySpaceChange} required>
+          <option value="" disabled>Select a study space</option>
+          {studySpaces.map((space) => (
+            <option key={space.id} value={space.id}>
+              {space.name}
+            </option>
+          ))}
+        </select>
 
         <label>Date</label>
         <input
@@ -131,9 +174,11 @@ function EditSession() {
         )}
 
         <label>Study Mode</label>
-        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)}>
+        <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
+          <option value="" disabled>Select a study mode</option>
           <option value="silent">Silent</option>
           <option value="discussion">Discussion</option>
+          <option value="Both">Both</option>
         </select>
 
         <label>Max Participants</label>

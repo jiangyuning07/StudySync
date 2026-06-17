@@ -31,7 +31,7 @@ function AllSessions() {
 
       <div className="session-list">
         {sessions.map((session) => (
-          <div className="card" key={session.id}>
+          <div className="card session-card" key={session.id}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
             <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>

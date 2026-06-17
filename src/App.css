@@ -171,5 +171,19 @@ h2 {
 
 .session-list {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
+}
+
+.session-card {
+  margin-top: 0;
+}
+
+.session-card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.session-card p {
+  margin: 8px 0;
 }

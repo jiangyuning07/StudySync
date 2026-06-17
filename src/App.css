@@ -187,3 +187,38 @@ h2 {
 .session-card p {
   margin: 8px 0;
 }
+
+.session-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.session-action-button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.edit-button {
+  background: #2563eb;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #1e3a8a;
+}
+
+.cancel-button {
+  background: #fae0e0;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.cancel-button:hover {
+  background: #fecaca;
+}

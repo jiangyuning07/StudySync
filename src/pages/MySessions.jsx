@@ -64,17 +64,25 @@ function MySessions() {
             <p><strong>Participants:</strong> {session.participants.length}/{session.maxParticipants}</p>
             <p><strong>Status:</strong> {session.status}</p>
 
-            {session.status === "Active" && (
-              <button onClick={() => navigate(`/sessions/${session.id}/edit`)}>
-                Edit
-              </button>
-            )}
+            <div className="session-actions">
+              {session.status === "Active" && (
+                <button
+                  className="session-action-button edit-button"
+                  onClick={() => navigate(`/sessions/${session.id}/edit`)}
+                >
+                  Edit
+                </button>
+              )}
 
-            {session.status === "Active" && (
-              <button onClick={() => handleCancelSession(session.id)}>
-                Cancel Session
-              </button>
-            )}
+              {session.status === "Active" && (
+                <button
+                  className="session-action-button cancel-button"
+                  onClick={() => handleCancelSession(session.id)}
+                >
+                  Cancel Session
+                </button>
+              )}
+              </div>
           </div>
         ))}
       </div>

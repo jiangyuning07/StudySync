@@ -214,11 +214,13 @@ h2 {
 }
 
 .cancel-button {
-  background: #fae0e0;
-  color: #991b1b;
+  background: #f5f7fb;
+  color: #e03a3a;
   border: 1px solid #fecaca;
 }
 
 .cancel-button:hover {
-  background: #fecaca;
+  background: #e03a3a;
+  color: white;
+  border: 1px solid #e03a3a;
 }

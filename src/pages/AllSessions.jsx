@@ -34,7 +34,7 @@ function AllSessions() {
           <div className="card session-card" key={session.id}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
-            <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
+            <p><strong>Time:</strong> {session.startTime} - {session.endTime} mins</p>
             <p><strong>Duration:</strong> {session.duration}</p>
             <p><strong>Study Mode:</strong> {session.studyMode}</p>
             <p><strong>Created by:</strong> {session.creatorName}</p>

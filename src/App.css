@@ -27,13 +27,22 @@ body {
 
 .nav-links {
   display: flex;
-  gap: 16px;
+  gap: 8px;
   align-items: center;
 }
 
 .nav-links a {
   color: white;
   text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-links a:hover {
+  background: #214abc;
+  color: #f5f7fb;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
 }
 
 .nav-links button {
@@ -43,6 +52,13 @@ body {
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-links button:hover {
+  background: #f5f7fb;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+  transform: scale(1.05) perspective(1px);
 }
 
 .page {
@@ -98,12 +114,20 @@ h2 {
 .primary-button {
   background: #2563eb;
   color: white;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form button:hover,
+.primary-button:hover {
+  background: #1e3a8a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
 }
 
 .secondary-button {
   background: white;
   color: #2563eb;
   border: 1px solid #2563eb;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .button-row {
@@ -207,20 +231,24 @@ h2 {
 .edit-button {
   background: #2563eb;
   color: white;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .edit-button:hover {
   background: #1e3a8a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
 .cancel-button {
   background: #f5f7fb;
   color: #e03a3a;
   border: 1px solid #fecaca;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .cancel-button:hover {
   background: #e03a3a;
   color: white;
   border: 1px solid #e03a3a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }

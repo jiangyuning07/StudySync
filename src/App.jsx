@@ -58,7 +58,7 @@ function App() {
           }
         />
         <Route
-          path="/sessions"
+          path="/all-sessions"
           element={
             <ProtectedRoute>
               <AllSessions />

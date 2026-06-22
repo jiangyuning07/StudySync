@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {db} from "../firebase";
+import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
 import {collection, query, where, getDocs, orderBy, doc, updateDoc} from "firebase/firestore";
@@ -32,7 +32,7 @@ function MySessions() {
     try {
       const sessionRef = doc(db, "sessions", sessionId);
       await updateDoc(sessionRef, {
-        status: "cancelled",
+        status: "Cancelled",
       });
       // Refresh the list after cancelling
       fetchMySessions();
@@ -55,7 +55,7 @@ function MySessions() {
 
       <div className="session-list">
         {sessions.map((session) => (
-          <div className="card" key={session.id} style={{opacity: session.status === "cancelled" ? 0.5 : 1}}>
+          <div className="card session-card" key={session.id} style={{opacity: session.status === "Cancelled" ? 0.5 : 1}}>
             <h2>{session.studySpaceName}</h2>
             <p><strong>Date:</strong> {session.date}</p>
             <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
@@ -64,17 +64,25 @@ function MySessions() {
             <p><strong>Participants:</strong> {session.participants.length}/{session.maxParticipants}</p>
             <p><strong>Status:</strong> {session.status}</p>
 
-            {session.status === "active" && (
-              <button onClick={() => navigate(`/sessions/${session.id}/edit`)}>
-                Edit
-              </button>
-            )}
+            <div className="session-actions">
+              {session.status === "Active" && (
+                <button
+                  className="session-action-button edit-button"
+                  onClick={() => navigate(`/sessions/${session.id}/edit`)}
+                >
+                  Edit
+                </button>
+              )}
 
-            {session.status === "active" && (
-              <button onClick={() => handleCancelSession(session.id)}>
-                Cancel Session
-              </button>
-            )}
+              {session.status === "Active" && (
+                <button
+                  className="session-action-button cancel-button"
+                  onClick={() => handleCancelSession(session.id)}
+                >
+                  Cancel Session
+                </button>
+              )}
+              </div>
           </div>
         ))}
       </div>

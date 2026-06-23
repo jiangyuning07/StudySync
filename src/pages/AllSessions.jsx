@@ -77,18 +77,18 @@ function AllSessions() {
   async function handleLeaveSession(sessionId) {
     if (!currentUser) return;
 
+    const confirmed = window.confirm("Are you sure you want to leave this session?");
+    if (!confirmed) return;
+
     try {
       setSessionActionLoading(sessionId, true);
       const sessionRef = doc(db, "sessions", sessionId);
-
       await updateDoc(sessionRef, {
         participants: arrayRemove(currentUser.uid),
       });
-
       await fetchSessions();
     } catch (error) {
       console.error("Failed to leave session:", error);
-      alert("Failed to leave session.");
     } finally {
       setSessionActionLoading(sessionId, false);
     }

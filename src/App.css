@@ -243,11 +243,13 @@ h2 {
 .edit-button {
   background: #2563eb;
   color: white;
+  border: 1px solid #2563eb;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .edit-button:hover {
   background: #1e3a8a;
+  border: 1px solid #1e3a8a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 

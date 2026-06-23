@@ -19,6 +19,18 @@ function MySessions() {
     }));
   };
 
+  function getSessionStartMillis(session) {
+    if (!session.date || !session.startTime) return Number.POSITIVE_INFINITY;
+
+    const parsedTime = Date.parse(`${session.date} ${session.startTime}`);
+    if (!Number.isNaN(parsedTime)) return parsedTime;
+
+    const parsedIsoTime = Date.parse(`${session.date}T${session.startTime}`);
+    if (!Number.isNaN(parsedIsoTime)) return parsedIsoTime;
+
+    return Number.POSITIVE_INFINITY;
+  }
+
   const fetchMySessions = useCallback(async () => {
     if (!currentUser) {
       setCreatedSessions([]);
@@ -48,14 +60,16 @@ function MySessions() {
       .map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
+      }))
+      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
 
     const joinedSessionList = joinedSnapshot.docs
       .map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
-      .filter((session) => session.creatorId !== currentUser.uid);
+      .filter((session) => session.creatorId !== currentUser.uid)
+      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
 
     setCreatedSessions(createdSessionList);
     setJoinedSessions(joinedSessionList);

@@ -2,14 +2,22 @@ import {useCallback, useEffect, useState} from "react";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {collection, query, where, getDocs, orderBy, doc, updateDoc} from "firebase/firestore";
+import {collection, query, where, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
 
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
   const [joinedSessions, setJoinedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
   const {currentUser} = useAuth();
   const navigate = useNavigate();
+
+  const setSessionActionLoading = (sessionId, isLoading) => {
+    setActionLoading((prev) => ({
+      ...prev,
+      [sessionId]: isLoading,
+    }));
+  };
 
   const fetchMySessions = useCallback(async () => {
     if (!currentUser) {
@@ -59,19 +67,40 @@ function MySessions() {
     if (!confirmed) return;
 
     try {
+      setSessionActionLoading(sessionId, true);
       const sessionRef = doc(db, "sessions", sessionId);
       await updateDoc(sessionRef, {
         status: "Cancelled",
       });
-      // Refresh the list after cancelling
-      fetchMySessions();
+      await fetchMySessions();
     } catch (error) {
       console.error("Failed to cancel session:", error);
+    } finally {
+      setSessionActionLoading(sessionId, false);
+    }
+  }
+
+  async function handleLeaveSession(sessionId) {
+    const confirmed = window.confirm("Are you sure you want to leave this session?");
+    if (!confirmed) return;
+
+    try {
+      setSessionActionLoading(sessionId, true);
+      const sessionRef = doc(db, "sessions", sessionId);
+      await updateDoc(sessionRef, {
+        participants: arrayRemove(currentUser.uid),
+      });
+      await fetchMySessions();
+    } catch (error) {
+      console.error("Failed to leave session:", error);
+    } finally {
+      setSessionActionLoading(sessionId, false);
     }
   }
 
   function renderSessionCard(session, type) {
     const participantCount = session.participants?.length || 0;
+    const isActionLoading = !!actionLoading[session.id];
 
     return (
       <div
@@ -91,6 +120,7 @@ function MySessions() {
           {type === "created" && session.status === "Active" && (
             <button
               className="session-action-button edit-button"
+              disabled={isActionLoading}
               onClick={() => navigate(`/sessions/${session.id}/edit`)}
             >
               Edit
@@ -100,9 +130,20 @@ function MySessions() {
           {type === "created" && session.status === "Active" && (
             <button
               className="session-action-button cancel-button"
+              disabled={isActionLoading}
               onClick={() => handleCancelSession(session.id)}
             >
-              Cancel Session
+              {isActionLoading ? "Cancelling..." : "Cancel Session"}
+            </button>
+          )}
+
+          {type === "joined" && session.status === "Active" && (
+            <button
+              className="session-action-button cancel-button"
+              disabled={isActionLoading}
+              onClick={() => handleLeaveSession(session.id)}
+            >
+              {isActionLoading ? "Leaving..." : "Leave Session"}
             </button>
           )}
         </div>

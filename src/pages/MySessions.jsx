@@ -4,6 +4,27 @@ import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
 import {collection, query, where, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
 
+function isExpired(session) {
+  const sessionEnd = new Date(`${session.date}T${session.endTime}`);
+  return sessionEnd < new Date();
+}
+
+function isInactive(session) {
+  return session.status === "Cancelled" || isExpired(session);
+}
+
+function sortSessions(sessions) {
+  const active = sessions.filter((s) => !isInactive(s));
+  const inactive = sessions.filter((s) => isInactive(s));
+
+  const byStartTime = (a, b) => {
+    const dateA = new Date(`${a.date}T${a.startTime}`);
+    const dateB = new Date(`${b.date}T${b.startTime}`);
+    return dateA - dateB;
+  };
+
+  return [...active.sort(byStartTime), ...inactive.sort(byStartTime)];
+}
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
   const [joinedSessions, setJoinedSessions] = useState([]);
@@ -71,8 +92,8 @@ function MySessions() {
       .filter((session) => session.creatorId !== currentUser.uid)
       .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
 
-    setCreatedSessions(createdSessionList);
-    setJoinedSessions(joinedSessionList);
+    setCreatedSessions(sortSessions(createdSessionList));
+    setJoinedSessions(sortSessions(joinedSessionList));
     setLoading(false);
   }, [currentUser]);
 
@@ -120,7 +141,7 @@ function MySessions() {
       <div
         className="card session-card"
         key={session.id}
-        style={{opacity: session.status === "Cancelled" ? 0.5 : 1}}
+        style={{opacity: isInactive(session) ? 0.5 : 1}}
       >
         <h3>{session.studySpaceName}</h3>
         <p><strong>Date:</strong> {session.date}</p>
@@ -131,7 +152,7 @@ function MySessions() {
         <p><strong>Status:</strong> {session.status}</p>
 
         <div className="session-actions">
-          {type === "created" && session.status === "Active" && (
+          {type === "created" && !isInactive(session) && (
             <button
               className="session-action-button edit-button"
               disabled={isActionLoading}
@@ -141,7 +162,7 @@ function MySessions() {
             </button>
           )}
 
-          {type === "created" && session.status === "Active" && (
+          {type === "created" && !isInactive(session) && (
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}
@@ -151,7 +172,7 @@ function MySessions() {
             </button>
           )}
 
-          {type === "joined" && session.status === "Active" && (
+          {type === "joined" && !isInactive(session) && (
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}

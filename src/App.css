@@ -144,20 +144,6 @@ h2 {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
-.study-spaces-section {
-  margin-top: 32px;
-}
-
-.study-spaces-section h2 {
-  margin-bottom: 16px;
-}
-
-.study-space-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
 .study-space-card {
   margin-top: 0;
 }
@@ -193,6 +179,20 @@ h2 {
   border-radius: 12px;
 }
 
+.study-spaces-section {
+  margin-top: 32px;
+}
+
+.study-spaces-section h2 {
+  margin-bottom: 16px;
+}
+
+.study-space-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
 .session-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -226,6 +226,18 @@ h2 {
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
+}
+
+.my-sessions-section {
+  margin-top: 2rem;
+}
+
+.my-sessions-section + .my-sessions-section {
+  margin-top: 3.5rem;
+}
+
+.my-sessions-section h2 {
+  margin-bottom: 1.5rem;
 }
 
 .edit-button {

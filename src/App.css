@@ -203,7 +203,8 @@ h2 {
   margin-top: 0;
 }
 
-.session-card h2 {
+.session-card h2,
+.session-card h3 {
   margin-top: 0;
   margin-bottom: 16px;
 }

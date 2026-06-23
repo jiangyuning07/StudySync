@@ -121,7 +121,7 @@ function AllSessions() {
               key={session.id}
               style={{opacity: session.status === "Cancelled" ? 0.5 : 1}}
             >
-              <h2>{session.studySpaceName}</h2>
+              <h3>{session.studySpaceName}</h3>
               <p><strong>Date:</strong> {session.date}</p>
               <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
               <p><strong>Duration:</strong> {session.duration} mins</p>

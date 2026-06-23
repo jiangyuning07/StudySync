@@ -144,20 +144,6 @@ h2 {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
-.study-spaces-section {
-  margin-top: 32px;
-}
-
-.study-spaces-section h2 {
-  margin-bottom: 16px;
-}
-
-.study-space-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
 .study-space-card {
   margin-top: 0;
 }
@@ -193,6 +179,20 @@ h2 {
   border-radius: 12px;
 }
 
+.study-spaces-section {
+  margin-top: 32px;
+}
+
+.study-spaces-section h2 {
+  margin-bottom: 16px;
+}
+
+.study-space-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
 .session-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -203,7 +203,8 @@ h2 {
   margin-top: 0;
 }
 
-.session-card h2 {
+.session-card h2,
+.session-card h3 {
   margin-top: 0;
   margin-bottom: 16px;
 }
@@ -228,14 +229,28 @@ h2 {
   cursor: pointer;
 }
 
+.my-sessions-section {
+  margin-top: 2rem;
+}
+
+.my-sessions-section + .my-sessions-section {
+  margin-top: 3.5rem;
+}
+
+.my-sessions-section h2 {
+  margin-bottom: 1.5rem;
+}
+
 .edit-button {
   background: #2563eb;
   color: white;
+  border: 1px solid #2563eb;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .edit-button:hover {
   background: #1e3a8a;
+  border: 1px solid #1e3a8a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 

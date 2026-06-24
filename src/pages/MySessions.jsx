@@ -25,6 +25,7 @@ function sortSessions(sessions) {
 
   return [...active.sort(byStartTime), ...inactive.sort(byStartTime)];
 }
+
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
   const [joinedSessions, setJoinedSessions] = useState([]);

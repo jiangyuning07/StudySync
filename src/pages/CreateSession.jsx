@@ -2,8 +2,6 @@ import {useState, useEffect} from "react";
 import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
-import {addDoc, collection, serverTimestamp, getDocs} from "firebase/firestore";
-import {useState, useEffect} from "react";
 
 function CreateSession() {
   const [studySpaces, setStudySpaces] = useState([]);
@@ -15,19 +13,6 @@ function CreateSession() {
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
-  const [studySpaces, setStudySpaces] = useState([]);
-
-  useEffect(() => {
-    async function fetchStudySpaces() {
-      const snapshot = await getDocs(collection(db, "studySpaces"));
-      const spaces = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setStudySpaces(spaces);
-    }
-    fetchStudySpaces();
-  }, []);
 
   useEffect(() => {
     async function fetchStudySpaces() {

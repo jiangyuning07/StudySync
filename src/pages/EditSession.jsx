@@ -130,7 +130,7 @@ function EditSession() {
 
   return (
     <main className="page">
-      <h1>Edit Session</h1>
+      <h1>Edit Session Details</h1>
 
       <form className="form" onSubmit={handleEditSession}>
         <label>Study Space</label>

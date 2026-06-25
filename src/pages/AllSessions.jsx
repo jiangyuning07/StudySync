@@ -3,6 +3,21 @@ import {collection, doc, getDocs, updateDoc, query, orderBy, arrayRemove, arrayU
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 
+function isExpired(session) {
+  return new Date(`${session.date}T${session.endTime}`) < new Date();
+}
+
+function isInactive(session) {
+  return session.status === "Cancelled" || isExpired(session);
+}
+
+function sortSessions(sessions) {
+  const byStartTime = (a, b) => new Date(`${a.date}T${a.startTime}`) - new Date(`${b.date}T${b.startTime}`);
+  const active = sessions.filter((s) => !isInactive(s)).sort(byStartTime);
+  const inactive = sessions.filter((s) => isInactive(s)).sort(byStartTime);
+  return [...active, ...inactive];
+}
+
 function AllSessions() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +38,7 @@ function AllSessions() {
       id: doc.id,
       ...doc.data(),
     }));
-    setSessions(sessionList);
+    setSessions(sortSessions(sessionList));
     setLoading(false);
   }, []);
 
@@ -114,13 +129,15 @@ function AllSessions() {
           const isFull = participantCount >= session.maxParticipants;
           const isActive = session.status === "Active";
           const isActionLoading = !!actionLoading[session.id];
+          const displayStatus = session.status === "Cancelled" ? "Cancelled" : isExpired(session) ? "Completed" : "Active";
 
           return (
             <div
               className="card session-card"
               key={session.id}
-              style={{opacity: session.status === "Cancelled" ? 0.5 : 1}}
+              style={{opacity: isInactive(session) ? 0.5 : 1}}
             >
+              
               <h3>{session.studySpaceName}</h3>
               <p><strong>Date:</strong> {session.date}</p>
               <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
@@ -128,7 +145,7 @@ function AllSessions() {
               <p><strong>Study Mode:</strong> {session.studyMode}</p>
               <p><strong>Created by:</strong> {session.creatorName}</p>
               <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
-              <p><strong>Status:</strong> {session.status}</p>
+              <p><strong>Status:</strong> {displayStatus}</p>
 
               {isActive && !isCreator && (
                 <div className="session-actions">

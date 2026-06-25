@@ -167,6 +167,14 @@ function MySessions() {
       <div
         className="card session-card"
         key={session.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate(`/sessions/${session.id}`)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            navigate(`/sessions/${session.id}`);
+          }
+        }}
         style={{opacity: isInactive(session) ? 0.5 : 1}}
       >
         <h3>{session.studySpaceName}</h3>
@@ -182,7 +190,10 @@ function MySessions() {
             <button
               className="session-action-button edit-button"
               disabled={isActionLoading}
-              onClick={() => navigate(`/sessions/${session.id}/edit`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/sessions/${session.id}/edit`);
+              }}
             >
               Edit
             </button>
@@ -192,7 +203,10 @@ function MySessions() {
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}
-              onClick={() => handleCancelSession(session.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelSession(session.id);
+              }}
             >
               {isActionLoading ? "Cancelling..." : "Cancel Session"}
             </button>
@@ -202,7 +216,10 @@ function MySessions() {
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}
-              onClick={() => handleLeaveSession(session.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLeaveSession(session.id);
+              }}
             >
               {isActionLoading ? "Leaving..." : "Leave Session"}
             </button>

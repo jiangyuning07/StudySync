@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from "react";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {collection, query, where, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
+import {collection, query, where, getDoc, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
 
 function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
@@ -31,6 +31,7 @@ function MySessions() {
   const [joinedSessions, setJoinedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
+  const [participantProfiles, setParticipantProfiles] = useState({});
   const {currentUser} = useAuth();
   const navigate = useNavigate();
 
@@ -84,6 +85,30 @@ function MySessions() {
         ...doc.data(),
       }))
       .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
+
+    const participantUids = [
+      ...new Set(createdSessionList.flatMap((session => session.participants || [])))
+    ];
+
+    const participantProfileEntries = await Promise.all(
+      participantUids.map(async (uid) => {
+        const userSnap = await getDoc(doc(db, "users", uid));
+
+        if (!userSnap.exists()) {
+          return [uid, {name: "Unknown participant"}];
+        }
+
+        return [
+          uid,
+          {
+            uid,
+            ...userSnap.data(),
+          },
+        ];
+      })
+    );
+
+    setParticipantProfiles(Object.fromEntries(participantProfileEntries));
 
     const joinedSessionList = joinedSnapshot.docs
       .map((doc) => ({

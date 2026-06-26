@@ -62,9 +62,13 @@ body {
 }
 
 .page {
-  max-width: 1275px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 0 24px;
+}
+
+.session-form-page {
+  max-width: 688px;
 }
 
 h1 {
@@ -99,8 +103,7 @@ h2 {
 }
 
 .form button,
-.primary-button,
-.secondary-button {
+.primary-button {
   margin-top: 8px;
   padding: 12px 16px;
   border-radius: 8px;
@@ -121,13 +124,6 @@ h2 {
 .primary-button:hover {
   background: #1e3a8a;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
-}
-
-.secondary-button {
-  background: white;
-  color: #2563eb;
-  border: 1px solid #2563eb;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .button-row {
@@ -197,14 +193,14 @@ h2 {
 
 .study-space-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 370px), 370px));
   gap: 20px;
   justify-content: start;
 }
 
 .session-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 370px), 370px));
   gap: 20px;
   justify-content: start;
 }
@@ -238,20 +234,39 @@ h2 {
   flex-wrap: wrap;
 }
 
+.details-actions {
+  justify-content: center;
+}
+
 .session-action-button {
+  min-width: 60px;
+  min-height: 34px;
+  padding: 0 12px;
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
 }
 
+.back-button {
+  background: white;
+  color: #2563eb;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back-button:hover {
+  background: #e5e7eb;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
 .edit-button {
   background: #2563eb;
   color: white;
-  border: 1px solid #2563eb;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .edit-button:hover {
@@ -278,7 +293,7 @@ h2 {
   background: #f5f7fb;
   color: #e03a3a;
   border: 1px solid #fecaca;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cancel-button:hover {
@@ -286,6 +301,77 @@ h2 {
   color: white;
   border: 1px solid #e03a3a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.session-details-card {
+  max-width: 640px;
+  margin: 20px auto 0;
+  text-align: left;
+}
+
+.participant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.participant-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 12px;
+  align-items: baseline;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.participant-name,
+.participant-item small {
+  line-height: 0.8;
+}
+
+.participant-item small {
+  justify-self: end;
+  text-align: right;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.edit-participants-dropdown summary {
+  cursor: pointer;
+}
+
+.participant-edit-item {
+  line-height: 0.8;
+  grid-template-columns: minmax(0, 1fr) max-content 24px;
+  align-items: center;
+}
+
+.form .remove-participant-button {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  color: #e03a3a;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 24px;
+  line-height: 1;
+}
+
+.form .remove-participant-button:hover {
+  background: transparent;
+  color: #e03a3a;
 }
 
 .my-sessions-section {

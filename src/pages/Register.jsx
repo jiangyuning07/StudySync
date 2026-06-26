@@ -4,6 +4,7 @@ import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} fr
 import {doc, addDoc, setDoc, collection, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "../utils/firebase";
 import {isValidNusEmail} from "../utils/authRules";
+import {getRegisterError} from "../utils/authErrors";
 
 function Register() {
   const location = useLocation();
@@ -44,18 +45,10 @@ function Register() {
       setMessage("Account created. Please check your email for verification before logging in.");
       setTimeout(() => navigate("/login"), 2000);
     } catch (error) {
+      const registerError = getRegisterError(error);
 
-      if (error.code === "auth/email-already-in-use") {
-        setShowLoginHint(true);
-        return;
-      }
-
-      if (error.code === "auth/weak-password") {
-        setMessage("Password should be at least 6 characters.");
-        return;
-      }
-
-      setMessage(error.message);
+      setMessage(registerError.message);
+      setShowLoginHint(registerError.hint === "login");
     }
   }
 

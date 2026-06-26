@@ -1,4 +1,7 @@
 export function isValidNusEmail(email) {
+  if (typeof email !== "string") {
+    return false;
+  }
   return /^e\d{7}@u\.nus\.edu$/i.test(email.trim());
 }
 

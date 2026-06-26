@@ -13,6 +13,7 @@ function isInactive(session) {
   return session.status === "Cancelled" || isExpired(session);
 }
 
+// Fetch participant details for a single session
 async function getSessionDetails(id) {
   const sessionSnap = await getDoc(doc(db, "sessions", id));
 

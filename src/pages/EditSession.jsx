@@ -1,5 +1,5 @@
 import {useState, useEffect} from "react";
-import {doc, getDoc, getDocs, updateDoc, collection, orderBy, query} from "firebase/firestore";
+import {doc, getDoc, getDocs, updateDoc, collection, orderBy, query, arrayRemove} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate, useParams} from "react-router-dom";
@@ -19,6 +19,8 @@ function EditSession() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [participantCount, setParticipantCount] = useState(0);
+  const [participants, setParticipants] = useState([]);
+  const [removedParticipantId, setRemovedParticipantId] = useState([]);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -67,7 +69,20 @@ function EditSession() {
           return;
         }
 
-        setParticipantCount(data.participants?.length || 0);
+        const participantIds = data.participants || [];
+        const participantProfiles = await Promise.all(
+          participantIds.map(async (uid) => {
+            const userSnap = await getDoc(doc(db, "users", uid));
+
+            if (!userSnap.exists()) {
+              return {uid, name: "Unknown participant"};
+            }
+
+            return {uid, ...userSnap.data()};
+          })
+        );
+        setParticipants(participantProfiles);
+        setParticipantCount(participantProfiles.length);
 
         // Pre-fill the form with existing session data
         setStudySpaceId(data.studySpaceId || "");
@@ -85,6 +100,24 @@ function EditSession() {
     }
     fetchStudySpacesAndSession();
   }, [id, currentUser.uid, navigate]);
+
+  function handleRemoveParticipant(participant) {
+    const label = participant.name;
+    const confirmed = window.confirm(`Are you sure you want to remove ${label} from this session?`);
+
+    if (!confirmed) return;
+
+    setParticipants((currentParticipants) =>
+      currentParticipants.filter((item) => item.uid !== participant.uid)
+    );
+
+    setParticipantCount((currentCount) => currentCount - 1);
+
+    setRemovedParticipantId((currentIds) => [
+      ...currentIds,
+      participant.uid,
+    ]);
+  }
 
   async function handleEditSession(e) {
     e.preventDefault();
@@ -111,15 +144,13 @@ function EditSession() {
     const duration = calculateDuration(startTime, endTime);
 
     if (Number(maxParticipants) < participantCount) {
-      setMessage(
-        `Max participants cannot be less than the current number of joined participants (${participantCount}).`
-      );
+      setMessage(`Max participants cannot be less than the current number of joined participants (${participantCount}).`);
       return;
     }
 
     try {
       const sessionRef = doc(db, "sessions", id);
-      await updateDoc(sessionRef, {
+      const updateData = {
         studySpaceId: selectedStudySpace.id,
         studySpaceName: selectedStudySpace.name,
         date,
@@ -128,7 +159,13 @@ function EditSession() {
         duration,
         studyMode,
         maxParticipants: Number(maxParticipants),
-      });
+      };
+
+      if (removedParticipantId.length > 0) {
+        updateData.participants = arrayRemove(...removedParticipantId);
+      }
+      
+      await updateDoc(sessionRef, updateData);
       setMessage("Session updated successfully!");
       setTimeout(() => navigate(`/sessions/${id}`), 1500);
     } catch (error) {
@@ -200,6 +237,34 @@ function EditSession() {
           max="20"
           required
         />
+
+        <details className="edit-participants-dropdown">
+          <summary>
+            <label>Manage Participants</label> ({participants.length})
+          </summary>
+
+          {participants.length === 0 ? (
+            <p>No participants yet.</p>
+          ) : (
+            <ul className="participant-list">
+              {participants.map((participant) => (
+                <li key={participant.uid} className="participant-item participant-edit-item">
+                  {participant.name || "Unnamed participant"}
+                  {participant.email && <small>{participant.email}</small>}
+
+                  <button
+                    type="button"
+                    className="remove-participant-button"
+                    onClick={() => handleRemoveParticipant(participant)}
+                    aria-label={`Remove ${participant.name}`}
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </details>
 
         <button type="submit">Save Changes</button>
       </form>

@@ -57,6 +57,7 @@ function MySessions() {
     }));
   };
 
+  // Fetch participants for all sessions the current user created and creators for all sessions joined
   const fetchMySessions = useCallback(async () => {
     if (!currentUser) {
       setCreatedSessions([]);

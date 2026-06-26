@@ -147,7 +147,7 @@ function SessionDetails() {
       </section>
 
       <div className="session-actions details-actions">
-        <button className="session-action-button back-button" onClick={() => navigate(-1)}>
+        <button className="session-action-button back-button" onClick={() => navigate(`/sessions`)}>
           Back
         </button>
 

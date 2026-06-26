@@ -247,18 +247,6 @@ h2 {
   cursor: pointer;
 }
 
-.my-sessions-section {
-  margin-top: 2rem;
-}
-
-.my-sessions-section + .my-sessions-section {
-  margin-top: 3.5rem;
-}
-
-.my-sessions-section h2 {
-  margin-bottom: 1.5rem;
-}
-
 .edit-button {
   background: #2563eb;
   color: white;
@@ -270,6 +258,20 @@ h2 {
   background: #1e3a8a;
   border: 1px solid #1e3a8a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.full-button {
+  background: #e5e7eb;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  cursor: not-allowed;
+}
+
+.full-button:hover {
+  background: #e5e7eb;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  box-shadow: none;
 }
 
 .cancel-button {
@@ -284,4 +286,16 @@ h2 {
   color: white;
   border: 1px solid #e03a3a;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.my-sessions-section {
+  margin-top: 2rem;
+}
+
+.my-sessions-section + .my-sessions-section {
+  margin-top: 3.5rem;
+}
+
+.my-sessions-section h2 {
+  margin-bottom: 1.5rem;
 }

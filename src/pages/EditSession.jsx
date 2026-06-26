@@ -62,7 +62,7 @@ function EditSession() {
 
         // Prevent non-creators from accessing this page
         if (data.creatorId !== currentUser.uid) {
-          navigate("/my-sessions");
+          navigate(-1);
           return;
         }
 
@@ -120,7 +120,7 @@ function EditSession() {
         maxParticipants: Number(maxParticipants),
       });
       setMessage("Session updated successfully!");
-      setTimeout(() => navigate("/my-sessions"), 1500);
+      setTimeout(() => navigate(-1), 1500);
     } catch (error) {
       setMessage(error.message);
     }

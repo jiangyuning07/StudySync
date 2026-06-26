@@ -10,6 +10,7 @@ import CreateSession from "./pages/CreateSession";
 import AllSessions from "./pages/AllSessions";
 import MySessions from "./pages/MySessions";
 import EditSession from "./pages/EditSession";
+import SessionDetails from "./pages/SessionDetails";
 
 function App() {
   return (
@@ -70,6 +71,14 @@ function App() {
           element={
             <ProtectedRoute>
               <MySessions />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sessions/:id"
+          element={
+            <ProtectedRoute>
+              <SessionDetails />
             </ProtectedRoute>
           }
         />

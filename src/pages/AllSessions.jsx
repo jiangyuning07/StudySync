@@ -210,7 +210,7 @@ function AllSessions() {
               </button>
             ) : (
               <button
-                className="session-action-button edit-button"
+                className={`session-action-button ${isFull ? "full-button" : "edit-button"}`}
                 disabled={isActionLoading || isFull}
                 onClick={(e) => {
                   e.stopPropagation();

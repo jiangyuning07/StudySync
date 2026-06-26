@@ -2,6 +2,7 @@ import {useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {auth} from "../utils/firebase";
 import {isValidNusEmail} from "../utils/authRules";
+import {getLoginError} from "../utils/authErrors";
 import {signInWithEmailAndPassword, signOut} from "firebase/auth";
 
 function Login() {
@@ -36,13 +37,10 @@ function Login() {
 
       navigate("/");
     } catch (error) {
+      const loginError = getLoginError(error);
 
-      if (error.code === "auth/invalid-credential") {
-        setShowRegisterHint(true);
-        return;
-      }
-
-      setMessage(error.message);
+      setMessage(loginError.message);
+      setShowRegisterHint(loginError.hint === "register");
     }
   }
 

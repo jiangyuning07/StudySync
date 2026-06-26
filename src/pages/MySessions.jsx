@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from "react";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {collection, query, where, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
+import {collection, query, where, getDoc, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
 
 function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
@@ -31,6 +31,8 @@ function MySessions() {
   const [joinedSessions, setJoinedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
+  const [participantProfiles, setParticipantProfiles] = useState({});
+  const [creatorProfiles, setCreatorProfiles] = useState({});
   const {currentUser} = useAuth();
   const navigate = useNavigate();
 
@@ -93,6 +95,51 @@ function MySessions() {
       .filter((session) => session.creatorId !== currentUser.uid)
       .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
 
+    // Participant profiles of sessions user created, creator profiles of sessions user joined
+    const participantUids = [
+      ...new Set(
+        createdSessionList.flatMap((session) => session.participants || [])
+      ),
+    ];
+
+    const creatorUids = [
+      ...new Set(
+        joinedSessionList.map((session) => session.creatorId).filter(Boolean)
+      ),
+    ];
+
+    const participantProfileEntries = await Promise.all(
+      participantUids.map(async (uid) => {
+        const userSnap = await getDoc(doc(db, "users", uid));
+
+        if (!userSnap.exists()) {
+          return [uid, {uid, name: "Unknown participant"}];
+        }
+
+        return [
+          uid,
+          {
+            uid,
+            ...userSnap.data(),
+          },
+        ];
+      })
+    );
+
+    const creatorProfileEntries = await Promise.all(
+      creatorUids.map(async (uid) => {
+        const userSnap = await getDoc(doc(db, "users", uid));
+
+        if (!userSnap.exists()) {
+          return [uid, {uid, name: "Unknown creator"}];
+        }
+
+        return [uid, {uid, ...userSnap.data()}];
+      })
+    );
+
+    setParticipantProfiles(Object.fromEntries(participantProfileEntries));
+    setCreatorProfiles(Object.fromEntries(creatorProfileEntries));
     setCreatedSessions(sortSessions(createdSessionList));
     setJoinedSessions(sortSessions(joinedSessionList));
     setLoading(false);
@@ -136,12 +183,22 @@ function MySessions() {
 
   function renderSessionCard(session, type) {
     const participantCount = session.participants?.length || 0;
+    const creatorProfile = creatorProfiles[session.creatorId];
+    const creatorName = creatorProfile?.name || "Unknown creator";
     const isActionLoading = !!actionLoading[session.id];
 
     return (
       <div
         className="card session-card"
         key={session.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => navigate(`/sessions/${session.id}`)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            navigate(`/sessions/${session.id}`);
+          }
+        }}
         style={{opacity: isInactive(session) ? 0.5 : 1}}
       >
         <h3>{session.studySpaceName}</h3>
@@ -149,6 +206,9 @@ function MySessions() {
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
         <p><strong>Study Mode:</strong> {session.studyMode}</p>
+        {type === "joined" && (
+          <p><strong>Created by:</strong> {creatorName}</p>
+        )}
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {session.status}</p>
 
@@ -157,7 +217,10 @@ function MySessions() {
             <button
               className="session-action-button edit-button"
               disabled={isActionLoading}
-              onClick={() => navigate(`/sessions/${session.id}/edit`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/sessions/${session.id}/edit`);
+              }}
             >
               Edit
             </button>
@@ -167,7 +230,10 @@ function MySessions() {
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}
-              onClick={() => handleCancelSession(session.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancelSession(session.id);
+              }}
             >
               {isActionLoading ? "Cancelling..." : "Cancel Session"}
             </button>
@@ -177,7 +243,10 @@ function MySessions() {
             <button
               className="session-action-button cancel-button"
               disabled={isActionLoading}
-              onClick={() => handleLeaveSession(session.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLeaveSession(session.id);
+              }}
             >
               {isActionLoading ? "Leaving..." : "Leave Session"}
             </button>

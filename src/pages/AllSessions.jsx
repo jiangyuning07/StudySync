@@ -1,4 +1,5 @@
 import {useEffect, useState, useCallback} from "react";
+import {useNavigate} from "react-router-dom";
 import {collection, doc, getDocs, updateDoc, query, orderBy, arrayRemove, arrayUnion, runTransaction} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
@@ -23,6 +24,7 @@ function AllSessions() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const {currentUser} = useAuth();
+  const navigate = useNavigate();
 
   const setSessionActionLoading = (sessionId, isLoading) => {
     setActionLoading((prev) => ({
@@ -135,9 +137,16 @@ function AllSessions() {
             <div
               className="card session-card"
               key={session.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => navigate(`/sessions/${session.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  navigate(`/sessions/${session.id}`);
+                }
+              }}
               style={{opacity: isInactive(session) ? 0.5 : 1}}
             >
-              
               <h3>{session.studySpaceName}</h3>
               <p><strong>Date:</strong> {session.date}</p>
               <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
@@ -153,7 +162,10 @@ function AllSessions() {
                     <button
                       className="session-action-button cancel-button"
                       disabled={isActionLoading}
-                      onClick={() => handleLeaveSession(session.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLeaveSession(session.id);
+                      }}
                     >
                       {isActionLoading ? "Leaving..." : "Leave Session"}
                     </button>
@@ -161,7 +173,10 @@ function AllSessions() {
                     <button
                       className="session-action-button edit-button"
                       disabled={isActionLoading || isFull}
-                      onClick={() => handleJoinSession(session.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleJoinSession(session.id);
+                      }}
                     >
                       {isFull ? "Full" : isActionLoading ? "Joining..." : "Join Session"}
                     </button>

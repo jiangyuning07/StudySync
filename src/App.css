@@ -146,6 +146,14 @@ h2 {
 
 .study-space-card {
   margin-top: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.study-space-card:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .study-space-card h3 {
@@ -189,18 +197,28 @@ h2 {
 
 .study-space-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
   gap: 20px;
+  justify-content: start;
 }
 
 .session-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
+  gap: 20px;
+  justify-content: start;
 }
 
 .session-card {
   margin-top: 0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.session-card:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 .session-card h2,

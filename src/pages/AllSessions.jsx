@@ -206,7 +206,7 @@ function AllSessions() {
                   handleLeaveSession(session.id);
                 }}
               >
-                {isActionLoading ? "Leaving..." : "Leave Session"}
+                {isActionLoading ? "Leaving..." : "Leave"}
               </button>
             ) : (
               <button
@@ -217,7 +217,7 @@ function AllSessions() {
                   handleJoinSession(session.id);
                 }}
               >
-                {isFull ? "Full" : isActionLoading ? "Joining..." : "Join Session"}
+                {isFull ? "Full" : isActionLoading ? "Joining..." : "Join"}
               </button>
             )}
           </div>

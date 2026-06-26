@@ -237,7 +237,7 @@ function MySessions() {
                 handleCancelSession(session.id);
               }}
             >
-              {isActionLoading ? "Cancelling..." : "Cancel Session"}
+              {isActionLoading ? "Cancelling..." : "Cancel"}
             </button>
           )}
 
@@ -250,7 +250,7 @@ function MySessions() {
                 handleLeaveSession(session.id);
               }}
             >
-              {isActionLoading ? "Leaving..." : "Leave Session"}
+              {isActionLoading ? "Leaving..." : "Leave"}
             </button>
           )}
         </div>

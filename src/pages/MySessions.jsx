@@ -32,6 +32,7 @@ function MySessions() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [participantProfiles, setParticipantProfiles] = useState({});
+  const [creatorProfiles, setCreatorProfiles] = useState({});
   const {currentUser} = useAuth();
   const navigate = useNavigate();
 
@@ -86,8 +87,25 @@ function MySessions() {
       }))
       .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
 
+    const joinedSessionList = joinedSnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .filter((session) => session.creatorId !== currentUser.uid)
+      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
+
+    // Participant profiles of sessions user created, creator profiles of sessions user joined
     const participantUids = [
-      ...new Set(createdSessionList.flatMap((session => session.participants || [])))
+      ...new Set(
+        createdSessionList.flatMap((session) => session.participants || [])
+      ),
+    ];
+
+    const creatorUids = [
+      ...new Set(
+        joinedSessionList.map((session) => session.creatorId).filter(Boolean)
+      ),
     ];
 
     const participantProfileEntries = await Promise.all(
@@ -95,7 +113,7 @@ function MySessions() {
         const userSnap = await getDoc(doc(db, "users", uid));
 
         if (!userSnap.exists()) {
-          return [uid, {name: "Unknown participant"}];
+          return [uid, {uid, name: "Unknown participant"}];
         }
 
         return [
@@ -108,16 +126,20 @@ function MySessions() {
       })
     );
 
+    const creatorProfileEntries = await Promise.all(
+      creatorUids.map(async (uid) => {
+        const userSnap = await getDoc(doc(db, "users", uid));
+
+        if (!userSnap.exists()) {
+          return [uid, {uid, name: "Unknown creator"}];
+        }
+
+        return [uid, {uid, ...userSnap.data()}];
+      })
+    );
+
     setParticipantProfiles(Object.fromEntries(participantProfileEntries));
-
-    const joinedSessionList = joinedSnapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-      .filter((session) => session.creatorId !== currentUser.uid)
-      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
-
+    setCreatorProfiles(Object.fromEntries(creatorProfileEntries));
     setCreatedSessions(sortSessions(createdSessionList));
     setJoinedSessions(sortSessions(joinedSessionList));
     setLoading(false);
@@ -161,6 +183,8 @@ function MySessions() {
 
   function renderSessionCard(session, type) {
     const participantCount = session.participants?.length || 0;
+    const creatorProfile = creatorProfiles[session.creatorId];
+    const creatorName = creatorProfile?.name || "Unknown creator";
     const isActionLoading = !!actionLoading[session.id];
 
     return (
@@ -182,6 +206,9 @@ function MySessions() {
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
         <p><strong>Study Mode:</strong> {session.studyMode}</p>
+        {type === "joined" && (
+          <p><strong>Created by:</strong> {creatorName}</p>
+        )}
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {session.status}</p>
 

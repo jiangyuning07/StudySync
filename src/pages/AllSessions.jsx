@@ -140,6 +140,26 @@ function AllSessions() {
     }
   }
 
+  async function handleCancelSession(sessionId) {
+    const confirmed = window.confirm("Are you sure you want to cancel this session?");
+    if (!confirmed) return;
+
+    try {
+      setSessionActionLoading(sessionId, true);
+      const sessionRef = doc(db, "sessions", sessionId);
+
+      await updateDoc(sessionRef, {
+        status: "Cancelled",
+      });
+
+      await fetchMySessions();
+    } catch (error) {
+      console.error("Failed to cancel session:", error);
+    } finally {
+      setSessionActionLoading(sessionId, false);
+    }
+  }
+
   async function handleLeaveSession(sessionId) {
     if (!currentUser) return;
 
@@ -195,9 +215,33 @@ function AllSessions() {
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
 
-        {!isCreator && !isInactive(session) && (
+        {!isInactive(session) && (
           <div className="session-actions">
-            {isJoined ? (
+            {isCreator ? (
+              <>
+                <button
+                  className="session-action-button edit-button"
+                  disabled={isActionLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/sessions/${session.id}/edit`);
+                  }}
+                >
+                  Edit
+                </button>
+
+                <button
+                  className="session-action-button cancel-button"
+                  disabled={isActionLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancelSession(session.id);
+                  }}
+                >
+                  {isActionLoading ? "Cancelling..." : "Cancel"}
+                </button>
+              </>
+            ) : isJoined ? (
               <button
                 className="session-action-button cancel-button"
                 disabled={isActionLoading}

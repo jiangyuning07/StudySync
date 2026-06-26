@@ -137,7 +137,7 @@ function SessionDetails() {
           <ul className="participant-list">
             {participants.map((participant) => (
               <li key={participant.uid} className="participant-item">
-                <span>{participant.name || participant.email || "Unnamed participant"}</span>
+                <span className="participant-name">{participant.name || "Unnamed participant"}</span>
                 {participant.email && <small>{participant.email}</small>}
               </li>
             ))}

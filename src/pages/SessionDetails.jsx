@@ -105,11 +105,11 @@ function SessionDetails() {
     }
   }
 
-  if (loading) return <main className="page"><p>Loading session...</p></main>;
+  if (loading) return <main className="page session-form-page"><p>Loading session...</p></main>;
 
   if (!session) {
     return (
-      <main className="page">
+      <main className="page session-form-page">
         <h1>Session Details</h1>
         {message && <p className="message">{message}</p>}
         <div className="session-actions details-actions">
@@ -125,10 +125,10 @@ function SessionDetails() {
   const canManageSession = isCreator && !isInactive(session);
 
   return (
-    <main className="page">
+    <main className="page session-form-page">
       <h1>Session Details</h1>
 
-      <section className="card session-details-card">
+      <section className="card">
         <h2>Participants</h2>
 
         {participants.length === 0 ? (

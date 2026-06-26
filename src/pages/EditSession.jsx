@@ -136,13 +136,13 @@ function EditSession() {
     }
   }
 
-  if (loading) return <main className="page"><p>Loading...</p></main>;
+  if (loading) return <main className="page session-form-page"><p>Loading...</p></main>;
 
   return (
-    <main className="page">
+    <main className="page session-form-page">
       <h1>Edit Session Details</h1>
 
-      <form className="form" onSubmit={handleEditSession}>
+      <form className="form edit-session-form" onSubmit={handleEditSession}>
         <label>Study Space</label>
         <select value={studySpaceId} onChange={handleStudySpaceChange} required>
           <option value="" disabled>Select a study space</option>

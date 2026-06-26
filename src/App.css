@@ -62,9 +62,13 @@ body {
 }
 
 .page {
-  max-width: 1275px;
+  max-width: 1200px;
   margin: 40px auto;
   padding: 0 24px;
+}
+
+.session-form-page {
+  max-width: 688px;
 }
 
 h1 {
@@ -189,14 +193,14 @@ h2 {
 
 .study-space-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 370px), 370px));
   gap: 20px;
   justify-content: start;
 }
 
 .session-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 390px), 390px));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 370px), 370px));
   gap: 20px;
   justify-content: start;
 }

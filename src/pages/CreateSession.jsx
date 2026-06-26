@@ -101,7 +101,7 @@ function CreateSession() {
   }
 
   return (
-    <main className="page">
+    <main className="page session-form-page">
       <h1>Create a Study Session</h1>
 
       <form className="form" onSubmit={handleCreateSession}>

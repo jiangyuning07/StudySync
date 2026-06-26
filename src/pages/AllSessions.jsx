@@ -114,7 +114,7 @@ function AllSessions() {
           throw new Error("You cannot join your own session.");
         }
 
-        if (session.status !== "Active" || isExpired(session)) {
+        if (session.status !== "Active") {
           throw new Error("This session is not active.");
         }
 

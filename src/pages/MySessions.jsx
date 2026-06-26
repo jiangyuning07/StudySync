@@ -13,15 +13,29 @@ function isInactive(session) {
   return session.status === "Cancelled" || isExpired(session);
 }
 
+function getDisplayStatus(session) {
+  if (session.status === "Cancelled") return "Cancelled";
+  if (isExpired(session)) return "Completed";
+  return "Active";
+}
+
+function getSessionStartMillis(session) {
+  if (!session.date || !session.startTime) return Number.POSITIVE_INFINITY;
+
+  const parsedTime = Date.parse(`${session.date} ${session.startTime}`);
+  if (!Number.isNaN(parsedTime)) return parsedTime;
+
+  const parsedIsoTime = Date.parse(`${session.date}T${session.startTime}`);
+  if (!Number.isNaN(parsedIsoTime)) return parsedIsoTime;
+
+  return Number.POSITIVE_INFINITY;
+}
+
 function sortSessions(sessions) {
   const active = sessions.filter((s) => !isInactive(s));
   const inactive = sessions.filter((s) => isInactive(s));
 
-  const byStartTime = (a, b) => {
-    const dateA = new Date(`${a.date}T${a.startTime}`);
-    const dateB = new Date(`${b.date}T${b.startTime}`);
-    return dateA - dateB;
-  };
+  const byStartTime = (a, b) => getSessionStartMillis(a) - getSessionStartMillis(b);
 
   return [...active.sort(byStartTime), ...inactive.sort(byStartTime)];
 }
@@ -43,22 +57,12 @@ function MySessions() {
     }));
   };
 
-  function getSessionStartMillis(session) {
-    if (!session.date || !session.startTime) return Number.POSITIVE_INFINITY;
-
-    const parsedTime = Date.parse(`${session.date} ${session.startTime}`);
-    if (!Number.isNaN(parsedTime)) return parsedTime;
-
-    const parsedIsoTime = Date.parse(`${session.date}T${session.startTime}`);
-    if (!Number.isNaN(parsedIsoTime)) return parsedIsoTime;
-
-    return Number.POSITIVE_INFINITY;
-  }
-
   const fetchMySessions = useCallback(async () => {
     if (!currentUser) {
       setCreatedSessions([]);
       setJoinedSessions([]);
+      setParticipantProfiles({});
+      setCreatorProfiles({});
       setLoading(false);
       return;
     }
@@ -80,22 +84,18 @@ function MySessions() {
       getDocs(joinedSessionsQuery),
     ]);
 
-    const createdSessionList = createdSnapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
+    const createdSessionList = createdSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
 
     const joinedSessionList = joinedSnapshot.docs
       .map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }))
-      .filter((session) => session.creatorId !== currentUser.uid)
-      .sort((a, b) => getSessionStartMillis(a) - getSessionStartMillis(b));
+      .filter((session) => session.creatorId !== currentUser.uid);
 
-    // Participant profiles of sessions user created, creator profiles of sessions user joined
     const participantUids = [
       ...new Set(
         createdSessionList.flatMap((session) => session.participants || [])
@@ -116,13 +116,7 @@ function MySessions() {
           return [uid, {uid, name: "Unknown participant"}];
         }
 
-        return [
-          uid,
-          {
-            uid,
-            ...userSnap.data(),
-          },
-        ];
+        return [uid, {uid, ...userSnap.data()}];
       })
     );
 
@@ -152,9 +146,11 @@ function MySessions() {
     try {
       setSessionActionLoading(sessionId, true);
       const sessionRef = doc(db, "sessions", sessionId);
+
       await updateDoc(sessionRef, {
         status: "Cancelled",
       });
+
       await fetchMySessions();
     } catch (error) {
       console.error("Failed to cancel session:", error);
@@ -164,15 +160,19 @@ function MySessions() {
   }
 
   async function handleLeaveSession(sessionId) {
+    if (!currentUser) return;
+
     const confirmed = window.confirm("Are you sure you want to leave this session?");
     if (!confirmed) return;
 
     try {
       setSessionActionLoading(sessionId, true);
       const sessionRef = doc(db, "sessions", sessionId);
+
       await updateDoc(sessionRef, {
         participants: arrayRemove(currentUser.uid),
       });
+
       await fetchMySessions();
     } catch (error) {
       console.error("Failed to leave session:", error);
@@ -206,11 +206,13 @@ function MySessions() {
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
         <p><strong>Study Mode:</strong> {session.studyMode}</p>
+
         {type === "joined" && (
           <p><strong>Created by:</strong> {creatorName}</p>
         )}
+
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
-        <p><strong>Status:</strong> {session.status}</p>
+        <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
 
         <div className="session-actions">
           {type === "created" && !isInactive(session) && (
@@ -263,24 +265,37 @@ function MySessions() {
   return (
     <main className="page">
       <h1>My Sessions</h1>
+
       {loading && <p>Loading your sessions...</p>}
 
       {!loading && (
         <>
           <section>
             <h2 className="my-sessions-section">Sessions I Created</h2>
-            {createdSessions.length === 0 && <p>You have not created any sessions yet.</p>}
-            <div className="session-list">
-              {createdSessions.map((session) => renderSessionCard(session, "created"))}
-            </div>
+
+            {createdSessions.length === 0 && (
+              <p>You have not created any sessions yet.</p>
+            )}
+
+            {createdSessions.length > 0 && (
+              <div className="session-list">
+                {createdSessions.map((session) => renderSessionCard(session, "created"))}
+              </div>
+            )}
           </section>
 
           <section>
             <h2 className="my-sessions-section">Sessions I Joined</h2>
-            {joinedSessions.length === 0 && <p>You have not joined any sessions yet.</p>}
-            <div className="session-list">
-              {joinedSessions.map((session) => renderSessionCard(session, "joined"))}
-            </div>
+
+            {joinedSessions.length === 0 && (
+              <p>You have not joined any sessions yet.</p>
+            )}
+
+            {joinedSessions.length > 0 && (
+              <div className="session-list">
+                {joinedSessions.map((session) => renderSessionCard(session, "joined"))}
+              </div>
+            )}
           </section>
         </>
       )}

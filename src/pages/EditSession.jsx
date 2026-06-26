@@ -18,6 +18,7 @@ function EditSession() {
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [participantCount, setParticipantCount] = useState(0);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -62,9 +63,11 @@ function EditSession() {
 
         // Prevent non-creators from accessing this page
         if (data.creatorId !== currentUser.uid) {
-          navigate(-1);
+          navigate(`/sessions/${id}`);
           return;
         }
+
+        setParticipantCount(data.participants?.length || 0);
 
         // Pre-fill the form with existing session data
         setStudySpaceId(data.studySpaceId || "");
@@ -107,6 +110,13 @@ function EditSession() {
 
     const duration = calculateDuration(startTime, endTime);
 
+    if (Number(maxParticipants) < participantCount) {
+      setMessage(
+        `Max participants cannot be less than the current number of joined participants (${participantCount}).`
+      );
+      return;
+    }
+
     try {
       const sessionRef = doc(db, "sessions", id);
       await updateDoc(sessionRef, {
@@ -120,7 +130,7 @@ function EditSession() {
         maxParticipants: Number(maxParticipants),
       });
       setMessage("Session updated successfully!");
-      setTimeout(() => navigate(-1), 1500);
+      setTimeout(() => navigate(`/sessions/${id}`), 1500);
     } catch (error) {
       setMessage(error.message);
     }

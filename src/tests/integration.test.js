@@ -130,7 +130,20 @@ async function clearUsers() {
   await Promise.all(snapshot.docs.map((d) => deleteDoc(d.ref)));
 }
 
+async function clearAuthUsers() {
+  await fetch(
+    "http://127.0.0.1:9099/emulator/v1/projects/studysync-test/accounts",
+    { method: "DELETE" }
+  );
+}
+
 // ─── Tests ──────────────────────────────────────────────────────────────────
+
+beforeAll(async () => {
+  await clearAuthUsers();
+  await clearSessions();
+  await clearUsers();
+});
 
 describe("Auth — NUS email validation", () => {
   it("accepts valid NUS email", () => {

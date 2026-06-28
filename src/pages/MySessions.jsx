@@ -152,7 +152,7 @@ function MySessions() {
         status: "Cancelled",
       });
 
-      await fetchSessions();
+      await fetchMySessions();
     } catch (error) {
       console.error("Failed to cancel session:", error);
     } finally {

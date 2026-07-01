@@ -369,6 +369,11 @@ h2 {
   line-height: 1;
 }
 
+.participant-edit-item .remove-participant-button {
+  justify-self: center;
+  align-self: center;
+}
+
 .form .remove-participant-button:hover {
   background: transparent;
   color: #e03a3a;

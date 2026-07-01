@@ -263,12 +263,14 @@ function EditSession() {
                   {participant.name || "Unnamed participant"}
                   {participant.email && <small>{participant.email}</small>}
 
-                  {!isSessionCreator && (
+                  {isSessionCreator ? (
+                    <span className="participant-owner-badge">Owner</span>
+                  ) : (
                     <button
                       type="button"
                       className="remove-participant-button"
                       onClick={() => handleRemoveParticipant(participant)}
-                      aria-label={`Remove ${participant.name}`}
+                      aria-label={`Remove ${participant.name || "participant"}`}
                     >
                       ×
                     </button>

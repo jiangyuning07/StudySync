@@ -20,6 +20,7 @@ function EditSession() {
   const [loading, setLoading] = useState(true);
   const [participantCount, setParticipantCount] = useState(0);
   const [participants, setParticipants] = useState([]);
+  const [sessionCreatorId, setSessionCreatorId] = useState("");
   const [removedParticipantId, setRemovedParticipantId] = useState([]);
 
   function calculateDuration(start, end) {
@@ -69,6 +70,8 @@ function EditSession() {
           return;
         }
 
+        setSessionCreatorId(data.creatorId);
+
         const participantIds = data.participants || [];
         const participantProfiles = await Promise.all(
           participantIds.map(async (uid) => {
@@ -102,6 +105,12 @@ function EditSession() {
   }, [id, currentUser.uid, navigate]);
 
   function handleRemoveParticipant(participant) {
+    // Standalone safeguard to ensure session creators cannot be removed from session
+    if (participant.uid === sessionCreatorId) {
+      setMessage("Session creator cannot be removed.");
+      return;
+    }
+
     const label = participant.name;
     const confirmed = window.confirm(`Are you sure you want to remove ${label} from this session?`);
 
@@ -247,21 +256,25 @@ function EditSession() {
             <p>No participants yet.</p>
           ) : (
             <ul className="participant-list">
-              {participants.map((participant) => (
+              {participants.map((participant) => {
+                const isSessionCreator = participant.uid === sessionCreatorId;
+                return (
                 <li key={participant.uid} className="participant-item participant-edit-item">
                   {participant.name || "Unnamed participant"}
                   {participant.email && <small>{participant.email}</small>}
 
-                  <button
-                    type="button"
-                    className="remove-participant-button"
-                    onClick={() => handleRemoveParticipant(participant)}
-                    aria-label={`Remove ${participant.name}`}
-                  >
-                    ×
-                  </button>
+                  {!isSessionCreator && (
+                    <button
+                      type="button"
+                      className="remove-participant-button"
+                      onClick={() => handleRemoveParticipant(participant)}
+                      aria-label={`Remove ${participant.name}`}
+                    >
+                      ×
+                    </button>
+                  )}
                 </li>
-              ))}
+              )})}
             </ul>
           )}
         </details>

@@ -260,21 +260,24 @@ function EditSession() {
                 const isSessionCreator = participant.uid === sessionCreatorId;
                 return (
                 <li key={participant.uid} className="participant-item participant-edit-item">
-                  {participant.name || "Unnamed participant"}
+                    <span className="participant-name-with-badge">
+                    {participant.name || "Unnamed participant"}
+
+                    {isSessionCreator && (
+                      <span className="participant-owner-badge">Owner</span>
+                    )}
+                  </span>
                   {participant.email && <small>{participant.email}</small>}
 
-                  {isSessionCreator ? (
-                    <span className="participant-owner-badge">Owner</span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="remove-participant-button"
-                      onClick={() => handleRemoveParticipant(participant)}
-                      aria-label={`Remove ${participant.name || "participant"}`}
-                    >
-                      ×
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="remove-participant-button"
+                    onClick={() => handleRemoveParticipant(participant)}
+                    aria-label={`Remove ${participant.name || "participant"}`}
+                    disabled={isSessionCreator}
+                  >
+                    ×
+                  </button>
                 </li>
               )})}
             </ul>

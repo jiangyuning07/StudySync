@@ -84,7 +84,7 @@ function CreateSession() {
         maxParticipants: Number(maxParticipants),
         creatorId: currentUser.uid,
         creatorName: currentUser.displayName,
-        participants: [],
+        participants: [currentUser.uid],
         status: "Active",
         createdAt: serverTimestamp(),
       });

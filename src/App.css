@@ -323,14 +323,14 @@ h2 {
   grid-template-columns: minmax(0, 1fr) max-content;
   gap: 12px;
   align-items: baseline;
-  padding: 12px;
+  padding: 6px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
 
 .participant-name,
 .participant-item small {
-  line-height: 0.8;
+  line-height: 1.5;
 }
 
 .participant-item small {
@@ -361,9 +361,11 @@ h2 {
   background: transparent;
   color: #e03a3a;
   border-radius: 999px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  justify-self: center;
+  align-self: center;
 
   font-size: 24px;
   line-height: 1;
@@ -372,6 +374,40 @@ h2 {
 .form .remove-participant-button:hover {
   background: transparent;
   color: #e03a3a;
+}
+
+.form .remove-participant-button:disabled {
+  color: #6b7280;
+  border: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.participant-name-with-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.participant-owner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+
+  color: #047857;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .my-sessions-section {

@@ -252,15 +252,16 @@ function EditSession() {
             <label>Manage Participants</label> ({participants.length})
           </summary>
 
-          {participants.length === 0 ? (
-            <p>No participants yet.</p>
-          ) : (
-            <ul className="participant-list">
-              {participants.map((participant) => {
-                const isSessionCreator = participant.uid === sessionCreatorId;
-                return (
-                <li key={participant.uid} className="participant-item participant-edit-item">
-                    <span className="participant-name-with-badge">
+          <ul className="participant-list">
+            {participants.map((participant) => {
+              const isSessionCreator = participant.uid === sessionCreatorId;
+
+              return (
+                <li
+                  key={participant.uid}
+                  className="participant-item participant-edit-item"
+                >
+                  <span className="participant-name-with-badge">
                     {participant.name || "Unnamed participant"}
 
                     {isSessionCreator && (
@@ -268,7 +269,7 @@ function EditSession() {
                     )}
                   </span>
                   {participant.email && <small>{participant.email}</small>}
-
+                  
                   <button
                     type="button"
                     className="remove-participant-button"
@@ -279,9 +280,9 @@ function EditSession() {
                     ×
                   </button>
                 </li>
-              )})}
-            </ul>
-          )}
+              );
+            })}
+          </ul>
         </details>
 
         <button type="submit">Save Changes</button>

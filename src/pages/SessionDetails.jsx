@@ -122,8 +122,9 @@ function SessionDetails() {
     );
   }
 
-  const isCreator = session.creatorId === currentUser?.uid;
-  const canManageSession = isCreator && !isInactive(session);
+  const sessionCreatorId = session.creatorId;
+  const isCurrentUserSessionOwner = session.creatorId === currentUser?.uid;
+  const canManageSession = isCurrentUserSessionOwner && !isInactive(session);
 
   return (
     <main className="page session-form-page">
@@ -132,18 +133,23 @@ function SessionDetails() {
       <section className="card">
         <h2>Participants</h2>
 
-        {participants.length === 0 ? (
-          <p>No participants yet.</p>
-        ) : (
-          <ul className="participant-list">
-            {participants.map((participant) => (
+        <ul className="participant-list">
+          {participants.map((participant) => {
+            const isParticipantSessionOwner = participant.uid === sessionCreatorId;
+
+            return (
               <li key={participant.uid} className="participant-item">
-                <span className="participant-name">{participant.name || "Unnamed participant"}</span>
+                <span className="participant-name participant-name-with-badge">
+                  {participant.name || "Unnamed participant"}
+                  {isParticipantSessionOwner && (
+                    <span className="participant-owner-badge">Owner</span>
+                  )}
+                </span>
                 {participant.email && <small>{participant.email}</small>}
               </li>
-            ))}
-          </ul>
-        )}
+            );
+          })}
+        </ul>
       </section>
 
       <div className="session-actions details-actions">

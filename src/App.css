@@ -323,14 +323,14 @@ h2 {
   grid-template-columns: minmax(0, 1fr) max-content;
   gap: 12px;
   align-items: baseline;
-  padding: 12px;
+  padding: 6px 12px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
 
 .participant-name,
 .participant-item small {
-  line-height: 0.8;
+  line-height: 1.5;
 }
 
 .participant-item small {

@@ -1,11 +1,9 @@
 import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
-import {isFullyVerifiedNusUser} from "../utils/authRules";
 
 function Navbar() {
-  const {currentUser, logout} = useAuth();
+  const {canAccessApp, logout} = useAuth();
   const navigate = useNavigate();
-  const canAccessApp = isFullyVerifiedNusUser(currentUser);
 
   async function handleLogout() {
     await logout();

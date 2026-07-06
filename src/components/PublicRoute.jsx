@@ -1,11 +1,10 @@
 import {Navigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
-import {isFullyVerifiedNusUser} from "../utils/authRules";
 
 export default function PublicRoute({children}) {
-  const {currentUser} = useAuth();
+  const {canAccessApp} = useAuth();
 
-  if (isFullyVerifiedNusUser(currentUser)) {
+  if (canAccessApp) {
     return <Navigate to="/" replace />;
   }
 

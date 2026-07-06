@@ -1,6 +1,7 @@
 import {createContext, useContext, useEffect, useState} from "react";
 import {auth} from "./utils/firebase";
 import {onAuthStateChanged, signOut} from "firebase/auth";
+import {isFullyVerifiedNusUser} from "./utils/authRules";
 
 const AuthContext = createContext();
 
@@ -21,8 +22,11 @@ export function AuthProvider({children}) {
     await signOut(auth);
   }
 
+  const canAccessApp = isFullyVerifiedNusUser(currentUser);
+
   const value = {
     currentUser,
+    canAccessApp,
     logout,
   };
 

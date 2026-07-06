@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router-dom";
-import {createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
-import {doc, addDoc, setDoc, collection, serverTimestamp} from "firebase/firestore";
+import {createUserWithEmailAndPassword, sendEmailVerification, signOut, updateProfile} from "firebase/auth";
+import {doc, setDoc, serverTimestamp} from "firebase/firestore";
 import {auth, db} from "../utils/firebase";
 import {isValidNusEmail} from "../utils/authRules";
 import {getRegisterError} from "../utils/authErrors";
@@ -42,8 +42,14 @@ function Register() {
         createdAt: serverTimestamp(),
       });
 
-      setMessage("Account created. Please check your email for verification before logging in.");
-      setTimeout(() => navigate("/login"), 2000);
+      await signOut(auth);
+
+      const successMessage = "Account created. Please check your email for verification before logging in.";
+      setMessage(successMessage);
+      setTimeout(
+        () => navigate("/login", {state: {email: cleanedEmail, message: successMessage}}),
+        2000
+      );
     } catch (error) {
       const registerError = getRegisterError(error);
 

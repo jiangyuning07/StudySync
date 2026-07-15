@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {collection, doc, getDoc, getDocs, updateDoc, query, orderBy, arrayRemove, arrayUnion, runTransaction} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
+import {notifySessionCancelled} from "../utils/notifications";
 
 function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
@@ -140,7 +141,7 @@ function AllSessions() {
     }
   }
 
-  async function handleCancelSession(sessionId) {
+  async function handleCancelSession(session) {
     const confirmed = window.confirm("Are you sure you want to cancel this session?");
     if (!confirmed) return;
 
@@ -151,6 +152,8 @@ function AllSessions() {
       await updateDoc(sessionRef, {
         status: "Cancelled",
       });
+
+      await notifySessionCancelled(session);
 
       await fetchSessions();
     } catch (error) {
@@ -235,7 +238,7 @@ function AllSessions() {
                   disabled={isActionLoading}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleCancelSession(session.id);
+                    handleCancelSession(session);
                   }}
                 >
                   {isActionLoading ? "Cancelling..." : "Cancel"}

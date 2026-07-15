@@ -1,6 +1,7 @@
 import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
 import {useEffect, useRef, useState} from "react";
+import NotificationBell from "./NotificationBell";
 
 function getUserInitial(currentUser) {
   const source = currentUser?.displayName || currentUser?.email || "User";
@@ -100,7 +101,10 @@ function Navbar() {
             <Link to="/login">Login</Link>
           </>
         ) : (
-          <UserMenu currentUser={currentUser} onLogout={handleLogout} />
+          <>
+            <NotificationBell currentUser={currentUser} />
+            <UserMenu currentUser={currentUser} onLogout={handleLogout} />
+          </>
         )}
       </div>
     </nav>

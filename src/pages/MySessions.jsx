@@ -3,6 +3,7 @@ import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
 import {collection, query, where, getDoc, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
+import {notifySessionCancelled} from "../utils/notifications";
 
 function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
@@ -140,23 +141,25 @@ function MySessions() {
     setLoading(false);
   }, [currentUser]);
 
-  async function handleCancelSession(sessionId) {
+  async function handleCancelSession(session) {
     const confirmed = window.confirm("Are you sure you want to cancel this session?");
     if (!confirmed) return;
 
     try {
-      setSessionActionLoading(sessionId, true);
-      const sessionRef = doc(db, "sessions", sessionId);
+      setSessionActionLoading(session.id, true);
+      const sessionRef = doc(db, "sessions", session.id);
 
       await updateDoc(sessionRef, {
         status: "Cancelled",
       });
 
+      await notifySessionCancelled(session);
+
       await fetchMySessions();
     } catch (error) {
       console.error("Failed to cancel session:", error);
     } finally {
-      setSessionActionLoading(sessionId, false);
+      setSessionActionLoading(session.id, false);
     }
   }
 
@@ -235,7 +238,7 @@ function MySessions() {
               disabled={isActionLoading}
               onClick={(e) => {
                 e.stopPropagation();
-                handleCancelSession(session.id);
+                handleCancelSession(session);
               }}
             >
               {isActionLoading ? "Cancelling..." : "Cancel"}

@@ -3,6 +3,8 @@ import {useNavigate, useParams} from "react-router-dom";
 import {doc, getDoc, updateDoc} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
+import {notifySessionCancelled} from "../utils/notifications";
+
 
 function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
@@ -96,6 +98,7 @@ function SessionDetails() {
       await updateDoc(doc(db, "sessions", session.id), {
         status: "Cancelled",
       });
+      await notifySessionCancelled(session);
       const {sessionData, participantProfiles} = await getSessionDetails(session.id);
       setSession(sessionData);
       setParticipants(participantProfiles);

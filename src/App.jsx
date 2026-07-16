@@ -11,6 +11,7 @@ import AllSessions from "./pages/AllSessions";
 import MySessions from "./pages/MySessions";
 import EditSession from "./pages/EditSession";
 import SessionDetails from "./pages/SessionDetails";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -87,6 +88,14 @@ function App() {
           element={
             <ProtectedRoute>
               <EditSession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
             </ProtectedRoute>
           }
         />

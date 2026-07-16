@@ -3,6 +3,10 @@ import {doc, getDoc, getDocs, updateDoc, collection, orderBy, query, arrayRemove
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate, useParams} from "react-router-dom";
+import {
+  notifySessionUpdated,
+  notifyParticipantsRemoved,
+} from "../utils/notifications";
 
 function EditSession() {
   const {id} = useParams();
@@ -22,6 +26,7 @@ function EditSession() {
   const [participants, setParticipants] = useState([]);
   const [sessionCreatorId, setSessionCreatorId] = useState("");
   const [removedParticipantId, setRemovedParticipantId] = useState([]);
+  const [originalDetails, setOriginalDetails] = useState(null);
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -94,6 +99,15 @@ function EditSession() {
         setEndTime(data.endTime);
         setStudyMode(data.studyMode || "");
         setMaxParticipants(data.maxParticipants);
+
+        setOriginalDetails({
+          studySpaceId: data.studySpaceId || "",
+          date: data.date,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          studyMode: data.studyMode || "",
+          maxParticipants: data.maxParticipants,
+        });
         setLoading(false);
       } catch (error) {
         setMessage(error.message);
@@ -173,11 +187,42 @@ function EditSession() {
       if (removedParticipantId.length > 0) {
         updateData.participants = arrayRemove(...removedParticipantId);
       }
-      
+
       await updateDoc(sessionRef, updateData);
+
+      const detailsChanged =
+        !originalDetails ||
+        originalDetails.studySpaceId !== selectedStudySpace.id ||
+        originalDetails.date !== date ||
+        originalDetails.startTime !== startTime ||
+        originalDetails.endTime !== endTime ||
+        originalDetails.studyMode !== studyMode ||
+        Number(originalDetails.maxParticipants) !== Number(maxParticipants);
+
+      const remainingUids = participants.map((participant) => participant.uid);
+
+      const sessionForNotify = {
+        id,
+        creatorId: sessionCreatorId,
+        creatorName: currentUser.displayName,
+        studySpaceName: selectedStudySpace.name,
+        date,
+        participants: remainingUids,
+      };
+
+      if (detailsChanged) {
+        await notifySessionUpdated(sessionForNotify, {
+          excludeUids: removedParticipantId,
+        });
+      }
+
+      if (removedParticipantId.length > 0) {
+        await notifyParticipantsRemoved(sessionForNotify, removedParticipantId);
+      }
+
       setMessage("Session updated successfully!");
       setTimeout(() => navigate(`/sessions/${id}`), 1500);
-    } catch (error) {
+      } catch (error) {
       setMessage(error.message);
     }
   }

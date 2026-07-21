@@ -7,7 +7,12 @@ import {
   notifySessionUpdated,
   notifyParticipantsRemoved,
 } from "../utils/notifications";
-import {STUDY_GOAL_MAX_LENGTH} from "../utils/sessionUtils";
+import {
+  isValidNusModuleCode,
+  MODULE_CODE_MAX_LENGTH,
+  normalizeModuleCode,
+  STUDY_GOAL_MAX_LENGTH,
+} from "../utils/sessionUtils";
 
 function EditSession() {
   const {id} = useParams();
@@ -171,6 +176,11 @@ function EditSession() {
       return;
     }
 
+    if (!isValidNusModuleCode(moduleCode)) {
+      setMessage("Module codes need 2-4 letters, 4 digits, and an optional 1-2 letter suffix (e.g. CS1010S).");
+      return;
+    }
+
     const duration = calculateDuration(startTime, endTime);
 
     if (Number(maxParticipants) < participantCount) {
@@ -188,7 +198,7 @@ function EditSession() {
         endTime,
         duration,
         studyMode,
-        moduleCode: moduleCode.trim().toUpperCase(),
+        moduleCode: normalizeModuleCode(moduleCode),
         studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
       };
@@ -206,7 +216,7 @@ function EditSession() {
         originalDetails.startTime !== startTime ||
         originalDetails.endTime !== endTime ||
         originalDetails.studyMode !== studyMode ||
-        originalDetails.moduleCode !== moduleCode.trim().toUpperCase() ||
+        originalDetails.moduleCode !== normalizeModuleCode(moduleCode) ||
         originalDetails.studyGoal !== studyGoal.trim() ||
         Number(originalDetails.maxParticipants) !== Number(maxParticipants);
 
@@ -298,9 +308,11 @@ function EditSession() {
           id="module-code"
           value={moduleCode}
           onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          onBlur={() => setModuleCode(normalizeModuleCode(moduleCode))}
           type="text"
-          maxLength="16"
-          placeholder="e.g. CS2103T"
+          maxLength={MODULE_CODE_MAX_LENGTH}
+          placeholder="e.g. CS1010S"
+          autoCapitalize="characters"
         />
 
         <div className="field-label-row">

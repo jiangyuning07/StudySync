@@ -2,7 +2,12 @@ import {useState, useEffect} from "react";
 import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
-import {STUDY_GOAL_MAX_LENGTH} from "../utils/sessionUtils";
+import {
+  isValidNusModuleCode,
+  MODULE_CODE_MAX_LENGTH,
+  normalizeModuleCode,
+  STUDY_GOAL_MAX_LENGTH,
+} from "../utils/sessionUtils";
 
 function CreateSession() {
   const [studySpaces, setStudySpaces] = useState([]);
@@ -73,6 +78,11 @@ function CreateSession() {
       return;
     }
 
+    if (!isValidNusModuleCode(moduleCode)) {
+      setMessage("Module codes need 2-4 letters, 4 digits, and an optional 1-2 letter suffix (e.g. CS1010S).");
+      return;
+    }
+
     const duration = calculateDuration(startTime, endTime);
 
     try {
@@ -84,7 +94,7 @@ function CreateSession() {
         endTime,
         duration,
         studyMode,
-        moduleCode: moduleCode.trim().toUpperCase(),
+        moduleCode: normalizeModuleCode(moduleCode),
         studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
         creatorId: currentUser.uid,
@@ -165,9 +175,11 @@ function CreateSession() {
           id="module-code"
           value={moduleCode}
           onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          onBlur={() => setModuleCode(normalizeModuleCode(moduleCode))}
           type="text"
-          maxLength="16"
-          placeholder="e.g. CS2103T"
+          maxLength={MODULE_CODE_MAX_LENGTH}
+          placeholder="e.g. CS1010S"
+          autoCapitalize="characters"
         />
 
         <div className="field-label-row">

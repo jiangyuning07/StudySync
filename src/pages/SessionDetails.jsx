@@ -4,16 +4,8 @@ import {doc, getDoc, updateDoc} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {notifySessionCancelled} from "../utils/notifications";
-
-
-function isExpired(session) {
-  const sessionEnd = new Date(`${session.date}T${session.endTime}`);
-  return sessionEnd < new Date();
-}
-
-function isInactive(session) {
-  return session.status === "Cancelled" || isExpired(session);
-}
+import {getDisplayStatus, isInactive} from "../utils/sessionUtils";
+import SessionLabels from "../components/SessionLabels";
 
 // Fetch participant details for a single session
 async function getSessionDetails(id) {
@@ -133,7 +125,35 @@ function SessionDetails() {
     <main className="page session-form-page">
       <h1>Session Details</h1>
 
-      <section className="card">
+      <section className="card session-details-card">
+        <h2>{session.studySpaceName}</h2>
+        <SessionLabels session={session} />
+
+        <dl className="session-detail-list">
+          <div>
+            <dt>Date</dt>
+            <dd>{session.date}</dd>
+          </div>
+          <div>
+            <dt>Time</dt>
+            <dd>{session.startTime} - {session.endTime}</dd>
+          </div>
+          <div>
+            <dt>Duration</dt>
+            <dd>{session.duration} mins</dd>
+          </div>
+          <div>
+            <dt>Participants</dt>
+            <dd>{participants.length}/{session.maxParticipants}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{getDisplayStatus(session)}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="card session-details-card">
         <h2>Participants</h2>
 
         <ul className="participant-list">

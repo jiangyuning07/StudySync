@@ -10,6 +10,8 @@ function CreateSession() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [studyMode, setStudyMode] = useState("");
+  const [moduleCode, setModuleCode] = useState("");
+  const [studyGoal, setStudyGoal] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
@@ -81,6 +83,8 @@ function CreateSession() {
         endTime,
         duration,
         studyMode,
+        moduleCode: moduleCode.trim().toUpperCase(),
+        studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
         creatorId: currentUser.uid,
         creatorName: currentUser.displayName,
@@ -93,6 +97,8 @@ function CreateSession() {
       setStartTime("");
       setEndTime("");
       setStudyMode("");
+      setModuleCode("");
+      setStudyGoal("");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
     } catch (error) {
@@ -152,6 +158,26 @@ function CreateSession() {
           <option value="Discussion">Discussion</option>
           <option value="Both">Both</option>
         </select>
+
+        <label htmlFor="module-code">Module Code (Optional)</label>
+        <input
+          id="module-code"
+          value={moduleCode}
+          onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          type="text"
+          maxLength="16"
+          placeholder="e.g. CS2103T"
+        />
+
+        <label htmlFor="study-goal">Study Goal (Optional)</label>
+        <input
+          id="study-goal"
+          value={studyGoal}
+          onChange={(e) => setStudyGoal(e.target.value)}
+          type="text"
+          maxLength="120"
+          placeholder="e.g. Review week 6 tutorial questions"
+        />
 
         <label>Max Participants</label>
         <input

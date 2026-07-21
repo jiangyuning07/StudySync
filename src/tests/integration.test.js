@@ -61,6 +61,8 @@ async function createSession(creatorId, overrides = {}) {
     endTime: "12:00",
     duration: 120,
     studyMode: "Silent",
+    moduleCode: "CS2103T",
+    studyGoal: "Review tutorial questions",
     maxParticipants: 3,
     creatorId,
     participants: [],
@@ -348,6 +350,8 @@ describe("Sessions — Create", () => {
     const sessionId = await createSession(creatorId, {
       studySpaceName: "Utown Library",
       studyMode: "Discussion",
+      moduleCode: "CS2109S",
+      studyGoal: "Prepare for the midterm",
       maxParticipants: 5,
     });
 
@@ -356,6 +360,8 @@ describe("Sessions — Create", () => {
 
     expect(data.studySpaceName).toBe("Utown Library");
     expect(data.studyMode).toBe("Discussion");
+    expect(data.moduleCode).toBe("CS2109S");
+    expect(data.studyGoal).toBe("Prepare for the midterm");
     expect(data.maxParticipants).toBe(5);
     expect(data.status).toBe("Active");
     expect(data.creatorId).toBe(creatorId);

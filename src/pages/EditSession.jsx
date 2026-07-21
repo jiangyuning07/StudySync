@@ -19,6 +19,8 @@ function EditSession() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [studyMode, setStudyMode] = useState("");
+  const [moduleCode, setModuleCode] = useState("");
+  const [studyGoal, setStudyGoal] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,8 @@ function EditSession() {
         setStartTime(data.startTime);
         setEndTime(data.endTime);
         setStudyMode(data.studyMode || "");
+        setModuleCode((data.moduleCode || "").toUpperCase());
+        setStudyGoal(data.studyGoal || "");
         setMaxParticipants(data.maxParticipants);
 
         setOriginalDetails({
@@ -106,6 +110,8 @@ function EditSession() {
           startTime: data.startTime,
           endTime: data.endTime,
           studyMode: data.studyMode || "",
+          moduleCode: (data.moduleCode || "").toUpperCase(),
+          studyGoal: data.studyGoal || "",
           maxParticipants: data.maxParticipants,
         });
         setLoading(false);
@@ -181,6 +187,8 @@ function EditSession() {
         endTime,
         duration,
         studyMode,
+        moduleCode: moduleCode.trim().toUpperCase(),
+        studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
       };
 
@@ -197,6 +205,8 @@ function EditSession() {
         originalDetails.startTime !== startTime ||
         originalDetails.endTime !== endTime ||
         originalDetails.studyMode !== studyMode ||
+        originalDetails.moduleCode !== moduleCode.trim().toUpperCase() ||
+        originalDetails.studyGoal !== studyGoal.trim() ||
         Number(originalDetails.maxParticipants) !== Number(maxParticipants);
 
       const remainingUids = participants.map((participant) => participant.uid);
@@ -277,10 +287,30 @@ function EditSession() {
         <label>Study Mode</label>
         <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
           <option value="" disabled>Select a study mode</option>
-          <option value="silent">Silent</option>
-          <option value="discussion">Discussion</option>
+          <option value="Silent">Silent</option>
+          <option value="Discussion">Discussion</option>
           <option value="Both">Both</option>
         </select>
+
+        <label htmlFor="module-code">Module Code (Optional)</label>
+        <input
+          id="module-code"
+          value={moduleCode}
+          onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          type="text"
+          maxLength="16"
+          placeholder="e.g. CS2103T"
+        />
+
+        <label htmlFor="study-goal">Study Goal (Optional)</label>
+        <input
+          id="study-goal"
+          value={studyGoal}
+          onChange={(e) => setStudyGoal(e.target.value)}
+          type="text"
+          maxLength="120"
+          placeholder="e.g. Review week 6 tutorial questions"
+        />
 
         <label>Max Participants</label>
         <input

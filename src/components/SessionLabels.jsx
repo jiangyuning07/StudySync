@@ -11,6 +11,12 @@ function SessionLabels({session}) {
   const studyGoal = session.studyGoal?.trim();
   const studyMode = formatStudyMode(session.studyMode);
   const labels = [
+    studyMode && {
+      key: "mode",
+      className: "mode-label",
+      text: `Mode: ${studyMode}`,
+      title: `Study mode: ${studyMode}`,
+    },
     moduleCode && {
       key: "module",
       className: "module-label",
@@ -22,12 +28,6 @@ function SessionLabels({session}) {
       className: "goal-label",
       text: `Goal: ${studyGoal}`,
       title: `Study goal: ${studyGoal}`,
-    },
-    studyMode && {
-      key: "mode",
-      className: "mode-label",
-      text: `Mode: ${studyMode}`,
-      title: `Study mode: ${studyMode}`,
     },
   ].filter(Boolean);
 

@@ -325,7 +325,7 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 16px;
+  margin: 16px 0 0;
 }
 
 .session-label {

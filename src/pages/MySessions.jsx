@@ -172,7 +172,6 @@ function MySessions() {
         style={{opacity: isInactive(session) ? 0.5 : 1}}
       >
         <h3>{session.studySpaceName}</h3>
-        <SessionLabels session={session} />
         <p><strong>Date:</strong> {session.date}</p>
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
@@ -182,6 +181,7 @@ function MySessions() {
 
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
+        <SessionLabels session={session} />
 
         <div className="session-actions">
           {type === "created" && !isInactive(session) && (

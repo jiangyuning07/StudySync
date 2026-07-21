@@ -127,7 +127,6 @@ function SessionDetails() {
 
       <section className="card session-details-card">
         <h2>{session.studySpaceName}</h2>
-        <SessionLabels session={session} />
 
         <dl className="session-detail-list">
           <div>
@@ -151,6 +150,8 @@ function SessionDetails() {
             <dd>{getDisplayStatus(session)}</dd>
           </div>
         </dl>
+
+        <SessionLabels session={session} />
       </section>
 
       <section className="card session-details-card">

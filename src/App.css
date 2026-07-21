@@ -183,6 +183,19 @@ h2 {
   font-size: 16px;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-limit {
+  color: #6b7280;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
 .form button,
 .primary-button {
   margin-top: 8px;

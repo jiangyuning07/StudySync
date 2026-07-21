@@ -2,6 +2,7 @@ import {useState, useEffect} from "react";
 import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
+import {STUDY_GOAL_MAX_LENGTH} from "../utils/sessionUtils";
 
 function CreateSession() {
   const [studySpaces, setStudySpaces] = useState([]);
@@ -169,14 +170,20 @@ function CreateSession() {
           placeholder="e.g. CS2103T"
         />
 
-        <label htmlFor="study-goal">Study Goal (Optional)</label>
+        <div className="field-label-row">
+          <label htmlFor="study-goal">Study Goal (Optional)</label>
+          <small id="study-goal-limit" className="field-limit">
+            {studyGoal.length}/{STUDY_GOAL_MAX_LENGTH} characters
+          </small>
+        </div>
         <input
           id="study-goal"
           value={studyGoal}
           onChange={(e) => setStudyGoal(e.target.value)}
           type="text"
-          maxLength="120"
+          maxLength={STUDY_GOAL_MAX_LENGTH}
           placeholder="e.g. Review week 6 tutorial questions"
+          aria-describedby="study-goal-limit"
         />
 
         <label>Max Participants</label>

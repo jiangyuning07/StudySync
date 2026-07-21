@@ -1,3 +1,5 @@
+export const STUDY_GOAL_MAX_LENGTH = 120;
+
 export function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
   return sessionEnd < new Date();

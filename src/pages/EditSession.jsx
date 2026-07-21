@@ -7,6 +7,7 @@ import {
   notifySessionUpdated,
   notifyParticipantsRemoved,
 } from "../utils/notifications";
+import {STUDY_GOAL_MAX_LENGTH} from "../utils/sessionUtils";
 
 function EditSession() {
   const {id} = useParams();
@@ -101,7 +102,7 @@ function EditSession() {
         setEndTime(data.endTime);
         setStudyMode(data.studyMode || "");
         setModuleCode((data.moduleCode || "").toUpperCase());
-        setStudyGoal(data.studyGoal || "");
+        setStudyGoal((data.studyGoal || "").slice(0, STUDY_GOAL_MAX_LENGTH));
         setMaxParticipants(data.maxParticipants);
 
         setOriginalDetails({
@@ -111,7 +112,7 @@ function EditSession() {
           endTime: data.endTime,
           studyMode: data.studyMode || "",
           moduleCode: (data.moduleCode || "").toUpperCase(),
-          studyGoal: data.studyGoal || "",
+          studyGoal: (data.studyGoal || "").slice(0, STUDY_GOAL_MAX_LENGTH),
           maxParticipants: data.maxParticipants,
         });
         setLoading(false);
@@ -302,14 +303,20 @@ function EditSession() {
           placeholder="e.g. CS2103T"
         />
 
-        <label htmlFor="study-goal">Study Goal (Optional)</label>
+        <div className="field-label-row">
+          <label htmlFor="study-goal">Study Goal (Optional)</label>
+          <small id="study-goal-limit" className="field-limit">
+            {studyGoal.length}/{STUDY_GOAL_MAX_LENGTH} characters
+          </small>
+        </div>
         <input
           id="study-goal"
           value={studyGoal}
           onChange={(e) => setStudyGoal(e.target.value)}
           type="text"
-          maxLength="120"
+          maxLength={STUDY_GOAL_MAX_LENGTH}
           placeholder="e.g. Review week 6 tutorial questions"
+          aria-describedby="study-goal-limit"
         />
 
         <label>Max Participants</label>

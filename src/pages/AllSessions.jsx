@@ -1,9 +1,9 @@
-import {useEffect, useState, useCallback} from "react";
+import {useEffect, useState, useCallback, useMemo} from "react";
 import {useNavigate} from "react-router-dom";
 import {collection, doc, getDoc, getDocs, updateDoc, query, orderBy, arrayRemove, arrayUnion, runTransaction} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
-import {isExpired, isInactive, getDisplayStatus, getSessionStartMillis, sortSessions} from "../utils/sessionUtils";
+import {isInactive, getDisplayStatus, sortSessions, filterSessions, STUDY_MODES} from "../utils/sessionUtils";
 import {notifySessionCancelled} from "../utils/notifications";
 import SessionLabels from "../components/SessionLabels";
 
@@ -12,8 +12,37 @@ function AllSessions() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [creatorProfiles, setCreatorProfiles] = useState({});
+  const [studyModeFilter, setStudyModeFilter] = useState("");
+  const [moduleCodeFilter, setModuleCodeFilter] = useState("");
+  const [studyGoalFilter, setStudyGoalFilter] = useState("");
+  const [activeOnlyFilter, setActiveOnlyFilter] = useState(false);
   const {currentUser} = useAuth();
   const navigate = useNavigate();
+
+  const moduleCodes = useMemo(
+    () => [...new Set(sessions.map((session) => session.moduleCode?.trim().toUpperCase()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b)),
+    [sessions]
+  );
+  const filteredSessions = useMemo(
+    () => filterSessions(sessions, {
+      studyMode: studyModeFilter,
+      moduleCode: moduleCodeFilter,
+      studyGoal: studyGoalFilter,
+      activeOnly: activeOnlyFilter,
+    }),
+    [sessions, studyModeFilter, moduleCodeFilter, studyGoalFilter, activeOnlyFilter]
+  );
+  const hasActiveFilters = Boolean(
+    studyModeFilter || moduleCodeFilter.trim() || studyGoalFilter.trim() || activeOnlyFilter
+  );
+
+  function clearFilters() {
+    setStudyModeFilter("");
+    setModuleCodeFilter("");
+    setStudyGoalFilter("");
+    setActiveOnlyFilter(false);
+  }
 
   const setSessionActionLoading = (sessionId, isLoading) => {
     setActionLoading((prev) => ({
@@ -244,7 +273,7 @@ function AllSessions() {
   }, [fetchSessions]);
 
   return (
-    <main className="page">
+    <main className="page all-sessions-page">
       <h1>All Study Sessions</h1>
 
       {loading && <p>Loading study sessions...</p>}
@@ -254,8 +283,112 @@ function AllSessions() {
       )}
 
       {!loading && sessions.length > 0 && (
-        <div className="session-list">
-          {sessions.map((session) => renderSessionCard(session))}
+        <div className="all-sessions-layout">
+          <aside className="session-filters" aria-label="Filter study sessions">
+            <div className="session-filters-header">
+              <h2>Filter sessions</h2>
+              {hasActiveFilters && (
+                <button type="button" onClick={clearFilters}>Clear all</button>
+              )}
+            </div>
+
+            <div className="session-filter-group">
+              <label className="session-filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={activeOnlyFilter}
+                  onChange={(event) => setActiveOnlyFilter(event.target.checked)}
+                />
+                <span>Active sessions only</span>
+              </label>
+            </div>
+
+            <div className="session-filter-group">
+              <label htmlFor="study-mode-filter">Study mode</label>
+              <select
+                id="study-mode-filter"
+                value={studyModeFilter}
+                onChange={(event) => setStudyModeFilter(event.target.value)}
+              >
+                <option value="">All study modes</option>
+                {STUDY_MODES.map((studyMode) => (
+                  <option key={studyMode} value={studyMode}>{studyMode}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="session-filter-group">
+              <label htmlFor="module-code-filter">Module code</label>
+              <div className="session-filter-input-wrapper module-code-filter-input-wrapper">
+                <input
+                  id="module-code-filter"
+                  list="module-code-options"
+                  value={moduleCodeFilter}
+                  onChange={(event) => setModuleCodeFilter(event.target.value.toUpperCase())}
+                  type="text"
+                  placeholder="Type or select a code"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                />
+                {moduleCodeFilter && (
+                  <button
+                    type="button"
+                    className="session-filter-clear"
+                    onClick={() => setModuleCodeFilter("")}
+                    aria-label="Clear module code"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <datalist id="module-code-options">
+                {moduleCodes.map((moduleCode) => (
+                  <option key={moduleCode} value={moduleCode} />
+                ))}
+              </datalist>
+            </div>
+
+            <div className="session-filter-group">
+              <label htmlFor="study-goal-filter">Study goal</label>
+              <div className="session-filter-input-wrapper">
+                <input
+                  id="study-goal-filter"
+                  value={studyGoalFilter}
+                  onChange={(event) => setStudyGoalFilter(event.target.value)}
+                  type="text"
+                  placeholder="Search by keywords"
+                />
+                {studyGoalFilter && (
+                  <button
+                    type="button"
+                    className="session-filter-clear"
+                    onClick={() => setStudyGoalFilter("")}
+                    aria-label="Clear study goal"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <small>Use one or more words from the goal.</small>
+            </div>
+          </aside>
+
+          <section className="session-results">
+            <p className="session-result-count" aria-live="polite">
+              {filteredSessions.length} {filteredSessions.length === 1 ? "session" : "sessions"}
+            </p>
+
+            {filteredSessions.length > 0 ? (
+              <div className="session-list">
+                {filteredSessions.map((session) => renderSessionCard(session))}
+              </div>
+            ) : (
+              <div className="session-empty-state">
+                <h2>No matching sessions</h2>
+                <p>Try changing or clearing your filters.</p>
+              </div>
+            )}
+          </section>
         </div>
       )}
     </main>

@@ -7,6 +7,7 @@ import {
   getDisplayStatus,
   getSessionStartMillis,
   sortSessions,
+  filterSessions,
 } from "./sessionUtils";
 
 const FUTURE_DATE = "2099-12-31";
@@ -161,5 +162,73 @@ describe("sortSessions", () => {
     const sorted = sortSessions(sessions);
     expect(sorted[0].startTime).toBe("09:00");
     expect(sorted[1].startTime).toBe("10:00");
+  });
+});
+
+// ─── filterSessions ─────────────────────────────────────────────────────────
+
+describe("filterSessions", () => {
+  const sessions = [
+    makeSession({
+      id: "silent-cs",
+      studyMode: "Silent",
+      moduleCode: "CS2103T",
+      studyGoal: "Review week 6 tutorial questions",
+    }),
+    makeSession({
+      id: "discussion-ma",
+      studyMode: "Discussion",
+      moduleCode: "MA1521",
+      studyGoal: "Prepare for midterm exam",
+    }),
+    makeSession({
+      id: "silent-cs-alt",
+      studyMode: "Silent",
+      moduleCode: "CS1010S",
+      studyGoal: "Complete problem set",
+    }),
+  ];
+
+  it("returns all sessions when no filters are set", () => {
+    expect(filterSessions(sessions)).toEqual(sessions);
+  });
+
+  it("matches study mode exactly and case-insensitively", () => {
+    expect(filterSessions(sessions, {studyMode: "silent"}).map((s) => s.id))
+      .toEqual(["silent-cs", "silent-cs-alt"]);
+  });
+
+  it("supports partial, case-insensitive module code searches", () => {
+    expect(filterSessions(sessions, {moduleCode: "cs"}).map((s) => s.id))
+      .toEqual(["silent-cs", "silent-cs-alt"]);
+  });
+
+  it("matches every study goal keyword regardless of spacing", () => {
+    expect(filterSessions(sessions, {studyGoal: "  tutorial   week "}).map((s) => s.id))
+      .toEqual(["silent-cs"]);
+  });
+
+  it("combines different filters with AND logic", () => {
+    expect(filterSessions(sessions, {
+      studyMode: "Discussion",
+      moduleCode: "MA1521",
+      studyGoal: "exam",
+    }).map((s) => s.id)).toEqual(["discussion-ma"]);
+  });
+
+  it("shows only active, non-expired sessions when activeOnly is enabled", () => {
+    const mixedSessions = [
+      ...sessions,
+      makeSession({id: "cancelled", status: "Cancelled"}),
+      makeSession({id: "completed", date: PAST_DATE}),
+    ];
+
+    expect(filterSessions(mixedSessions, {activeOnly: true}).map((s) => s.id))
+      .toEqual(["silent-cs", "discussion-ma", "silent-cs-alt"]);
+  });
+
+  it("handles sessions with missing labels", () => {
+    expect(filterSessions([makeSession({id: "unlabelled"})], {studyGoal: "exam"}))
+      .toEqual([]);
   });
 });

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  isValidNusModuleCode,
+  normalizeModuleCode,
   isExpired,
   isInactive,
   getDisplayStatus,
@@ -19,6 +21,32 @@ function makeSession(overrides = {}) {
     ...overrides,
   };
 }
+
+// ─── NUS module codes ───────────────────────────────────────────────────────
+
+describe("NUS module code validation", () => {
+  it.each(["CS1010S", "MA1521", "GEA1000", "GEN2050X", "GESS1025"])(
+    "accepts %s",
+    (moduleCode) => {
+      expect(isValidNusModuleCode(moduleCode)).toBe(true);
+    }
+  );
+
+  it("allows an empty module code because the field is optional", () => {
+    expect(isValidNusModuleCode("")).toBe(true);
+  });
+
+  it.each(["A1234", "1010CS", "CS101", "CS10101", "CS-1010", "TOOLONG1010", "CS 1010"])(
+    "rejects %s",
+    (moduleCode) => {
+      expect(isValidNusModuleCode(moduleCode)).toBe(false);
+    }
+  );
+
+  it("trims and uppercases a module code", () => {
+    expect(normalizeModuleCode(" cs1010s ")).toBe("CS1010S");
+  });
+});
 
 // ─── isExpired ───────────────────────────────────────────────────────────────
 

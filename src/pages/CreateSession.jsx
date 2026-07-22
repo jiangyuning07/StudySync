@@ -2,6 +2,12 @@ import {useState, useEffect} from "react";
 import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
+import {
+  isValidNusModuleCode,
+  MODULE_CODE_MAX_LENGTH,
+  normalizeModuleCode,
+  STUDY_GOAL_MAX_LENGTH,
+} from "../utils/sessionUtils";
 
 function CreateSession() {
   const [studySpaces, setStudySpaces] = useState([]);
@@ -10,6 +16,8 @@ function CreateSession() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [studyMode, setStudyMode] = useState("");
+  const [moduleCode, setModuleCode] = useState("");
+  const [studyGoal, setStudyGoal] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
@@ -70,6 +78,11 @@ function CreateSession() {
       return;
     }
 
+    if (!isValidNusModuleCode(moduleCode)) {
+      setMessage("Module codes need 2-4 letters, 4 digits, and an optional 1-2 letter suffix (e.g. CS1010S).");
+      return;
+    }
+
     const duration = calculateDuration(startTime, endTime);
 
     try {
@@ -81,6 +94,8 @@ function CreateSession() {
         endTime,
         duration,
         studyMode,
+        moduleCode: normalizeModuleCode(moduleCode),
+        studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
         creatorId: currentUser.uid,
         creatorName: currentUser.displayName,
@@ -93,6 +108,8 @@ function CreateSession() {
       setStartTime("");
       setEndTime("");
       setStudyMode("");
+      setModuleCode("");
+      setStudyGoal("");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
     } catch (error) {
@@ -152,6 +169,34 @@ function CreateSession() {
           <option value="Discussion">Discussion</option>
           <option value="Both">Both</option>
         </select>
+
+        <label htmlFor="module-code">Module Code (Optional)</label>
+        <input
+          id="module-code"
+          value={moduleCode}
+          onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          onBlur={() => setModuleCode(normalizeModuleCode(moduleCode))}
+          type="text"
+          maxLength={MODULE_CODE_MAX_LENGTH}
+          placeholder="e.g. CS1010S"
+          autoCapitalize="characters"
+        />
+
+        <div className="field-label-row">
+          <label htmlFor="study-goal">Study Goal (Optional)</label>
+          <small id="study-goal-limit" className="field-limit">
+            {studyGoal.length}/{STUDY_GOAL_MAX_LENGTH} characters
+          </small>
+        </div>
+        <input
+          id="study-goal"
+          value={studyGoal}
+          onChange={(e) => setStudyGoal(e.target.value)}
+          type="text"
+          maxLength={STUDY_GOAL_MAX_LENGTH}
+          placeholder="e.g. Review week 6 tutorial questions"
+          aria-describedby="study-goal-limit"
+        />
 
         <label>Max Participants</label>
         <input

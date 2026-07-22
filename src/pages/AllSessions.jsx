@@ -5,6 +5,7 @@ import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {isExpired, isInactive, getDisplayStatus, getSessionStartMillis, sortSessions} from "../utils/sessionUtils";
 import {notifySessionCancelled} from "../utils/notifications";
+import SessionLabels from "../components/SessionLabels";
 
 function AllSessions() {
   const [sessions, setSessions] = useState([]);
@@ -178,10 +179,10 @@ function AllSessions() {
         <p><strong>Date:</strong> {session.date}</p>
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
-        <p><strong>Study Mode:</strong> {session.studyMode}</p>
         <p><strong>Created by:</strong> {creatorDisplayName}</p>
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
+        <SessionLabels session={session} />
 
         {!isInactive(session) && (
           <div className="session-actions">

@@ -183,6 +183,19 @@ h2 {
   font-size: 16px;
 }
 
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field-limit {
+  color: #6b7280;
+  font-weight: normal;
+  white-space: nowrap;
+}
+
 .form button,
 .primary-button {
   margin-top: 8px;
@@ -308,6 +321,45 @@ h2 {
   margin: 8px 0;
 }
 
+.session-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.session-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.module-label {
+  color: #1e40af;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.goal-label {
+  color: #6b21a8;
+  background: #faf5ff;
+  border-color: #e9d5ff;
+}
+
+.mode-label {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
 .session-actions {
   display: flex;
   gap: 10px;
@@ -388,6 +440,26 @@ h2 {
   max-width: 640px;
   margin: 20px auto 0;
   text-align: left;
+}
+
+.session-detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.session-detail-list div {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.session-detail-list dt {
+  font-weight: 700;
+}
+
+.session-detail-list dd {
+  margin: 0;
 }
 
 .participant-list {

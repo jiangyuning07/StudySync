@@ -5,6 +5,7 @@ import {useNavigate} from "react-router-dom";
 import {collection, query, where, getDoc, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
 import {isExpired, isInactive, getDisplayStatus, getSessionStartMillis, sortSessions} from "../utils/sessionUtils";
 import {notifySessionCancelled} from "../utils/notifications";
+import SessionLabels from "../components/SessionLabels";
 
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
@@ -174,14 +175,13 @@ function MySessions() {
         <p><strong>Date:</strong> {session.date}</p>
         <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
         <p><strong>Duration:</strong> {session.duration} mins</p>
-        <p><strong>Study Mode:</strong> {session.studyMode}</p>
-
         {type === "joined" && (
           <p><strong>Created by:</strong> {creatorName}</p>
         )}
 
         <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
         <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
+        <SessionLabels session={session} />
 
         <div className="session-actions">
           {type === "created" && !isInactive(session) && (

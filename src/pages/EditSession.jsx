@@ -7,6 +7,12 @@ import {
   notifySessionUpdated,
   notifyParticipantsRemoved,
 } from "../utils/notifications";
+import {
+  isValidNusModuleCode,
+  MODULE_CODE_MAX_LENGTH,
+  normalizeModuleCode,
+  STUDY_GOAL_MAX_LENGTH,
+} from "../utils/sessionUtils";
 
 function EditSession() {
   const {id} = useParams();
@@ -19,6 +25,8 @@ function EditSession() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [studyMode, setStudyMode] = useState("");
+  const [moduleCode, setModuleCode] = useState("");
+  const [studyGoal, setStudyGoal] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -98,6 +106,8 @@ function EditSession() {
         setStartTime(data.startTime);
         setEndTime(data.endTime);
         setStudyMode(data.studyMode || "");
+        setModuleCode((data.moduleCode || "").toUpperCase());
+        setStudyGoal((data.studyGoal || "").slice(0, STUDY_GOAL_MAX_LENGTH));
         setMaxParticipants(data.maxParticipants);
 
         setOriginalDetails({
@@ -106,6 +116,8 @@ function EditSession() {
           startTime: data.startTime,
           endTime: data.endTime,
           studyMode: data.studyMode || "",
+          moduleCode: (data.moduleCode || "").toUpperCase(),
+          studyGoal: (data.studyGoal || "").slice(0, STUDY_GOAL_MAX_LENGTH),
           maxParticipants: data.maxParticipants,
         });
         setLoading(false);
@@ -164,6 +176,11 @@ function EditSession() {
       return;
     }
 
+    if (!isValidNusModuleCode(moduleCode)) {
+      setMessage("Module codes need 2-4 letters, 4 digits, and an optional 1-2 letter suffix (e.g. CS1010S).");
+      return;
+    }
+
     const duration = calculateDuration(startTime, endTime);
 
     if (Number(maxParticipants) < participantCount) {
@@ -181,6 +198,8 @@ function EditSession() {
         endTime,
         duration,
         studyMode,
+        moduleCode: normalizeModuleCode(moduleCode),
+        studyGoal: studyGoal.trim(),
         maxParticipants: Number(maxParticipants),
       };
 
@@ -197,6 +216,8 @@ function EditSession() {
         originalDetails.startTime !== startTime ||
         originalDetails.endTime !== endTime ||
         originalDetails.studyMode !== studyMode ||
+        originalDetails.moduleCode !== normalizeModuleCode(moduleCode) ||
+        originalDetails.studyGoal !== studyGoal.trim() ||
         Number(originalDetails.maxParticipants) !== Number(maxParticipants);
 
       const remainingUids = participants.map((participant) => participant.uid);
@@ -277,10 +298,38 @@ function EditSession() {
         <label>Study Mode</label>
         <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
           <option value="" disabled>Select a study mode</option>
-          <option value="silent">Silent</option>
-          <option value="discussion">Discussion</option>
+          <option value="Silent">Silent</option>
+          <option value="Discussion">Discussion</option>
           <option value="Both">Both</option>
         </select>
+
+        <label htmlFor="module-code">Module Code (Optional)</label>
+        <input
+          id="module-code"
+          value={moduleCode}
+          onChange={(e) => setModuleCode(e.target.value.toUpperCase())}
+          onBlur={() => setModuleCode(normalizeModuleCode(moduleCode))}
+          type="text"
+          maxLength={MODULE_CODE_MAX_LENGTH}
+          placeholder="e.g. CS1010S"
+          autoCapitalize="characters"
+        />
+
+        <div className="field-label-row">
+          <label htmlFor="study-goal">Study Goal (Optional)</label>
+          <small id="study-goal-limit" className="field-limit">
+            {studyGoal.length}/{STUDY_GOAL_MAX_LENGTH} characters
+          </small>
+        </div>
+        <input
+          id="study-goal"
+          value={studyGoal}
+          onChange={(e) => setStudyGoal(e.target.value)}
+          type="text"
+          maxLength={STUDY_GOAL_MAX_LENGTH}
+          placeholder="e.g. Review week 6 tutorial questions"
+          aria-describedby="study-goal-limit"
+        />
 
         <label>Max Participants</label>
         <input

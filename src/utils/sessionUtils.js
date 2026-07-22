@@ -1,3 +1,17 @@
+export const STUDY_GOAL_MAX_LENGTH = 120;
+export const MODULE_CODE_MAX_LENGTH = 10;
+
+const NUS_MODULE_CODE_PATTERN = /^[A-Z]{2,4}\d{4}[A-Z]{0,2}$/;
+
+export function normalizeModuleCode(moduleCode) {
+  return moduleCode.trim().toUpperCase();
+}
+
+export function isValidNusModuleCode(moduleCode) {
+  const normalizedCode = normalizeModuleCode(moduleCode);
+  return normalizedCode === "" || NUS_MODULE_CODE_PATTERN.test(normalizedCode);
+}
+
 export function isExpired(session) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
   return sessionEnd < new Date();

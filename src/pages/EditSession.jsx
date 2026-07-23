@@ -11,6 +11,7 @@ import {
   isValidNusModuleCode,
   MODULE_CODE_MAX_LENGTH,
   normalizeModuleCode,
+  STUDY_MODES,
   STUDY_GOAL_MAX_LENGTH,
 } from "../utils/sessionUtils";
 
@@ -298,9 +299,9 @@ function EditSession() {
         <label>Study Mode</label>
         <select value={studyMode} onChange={(e) => setStudyMode(e.target.value)} required>
           <option value="" disabled>Select a study mode</option>
-          <option value="Silent">Silent</option>
-          <option value="Discussion">Discussion</option>
-          <option value="Both">Both</option>
+          {STUDY_MODES.map((mode) => (
+            <option key={mode} value={mode}>{mode}</option>
+          ))}
         </select>
 
         <label htmlFor="module-code">Module Code (Optional)</label>

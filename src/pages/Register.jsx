@@ -20,7 +20,7 @@ function Register() {
     setMessage("");
     setShowLoginHint(false);
 
-    const cleanedEmail = email.trim();
+    const cleanedEmail = email.trim().toLowerCase();
 
     if (!isValidNusEmail(cleanedEmail)) {
       setMessage("Please use your NUS email in the format e0123456@u.nus.edu.");

@@ -10,9 +10,11 @@ export const NOTIFICATION_TYPES = {
 
 // A short human phrase describing which session a notification is about.
 export function describeSession(session) {
-  const space = session?.studySpaceName || "a study session";
+  const sessionDescription = session?.studySpaceName
+    ? `the session at ${session.studySpaceName}`
+    : "a study session";
   const date = session?.date ? ` on ${session.date}` : "";
-  return `${space}${date}`;
+  return `${sessionDescription}${date}`;
 }
 
 // Everyone who should hear about an edit or a cancellation: the joined

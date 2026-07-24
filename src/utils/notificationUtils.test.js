@@ -18,7 +18,7 @@ const baseSession = {
 
 describe("describeSession", () => {
   it("combines the space name and date", () => {
-    expect(describeSession(baseSession)).toBe("Central Library on 2026-07-20");
+    expect(describeSession(baseSession)).toBe("the session at Central Library on 2026-07-20");
   });
 
   it("falls back gracefully when fields are missing", () => {
@@ -49,26 +49,26 @@ describe("computeSessionRecipients", () => {
 describe("message builders", () => {
   it("names the creator in the update message", () => {
     expect(buildUpdatedMessage(baseSession)).toBe(
-      "Alex updated Central Library on 2026-07-20."
+      "Alex updated the session at Central Library on 2026-07-20."
     );
   });
 
   it("names the creator in the cancel message", () => {
     expect(buildCancelledMessage(baseSession)).toBe(
-      "Alex cancelled Central Library on 2026-07-20."
+      "Alex cancelled the session at Central Library on 2026-07-20."
     );
   });
 
   it("addresses the removed participant directly", () => {
     expect(buildRemovedMessage(baseSession)).toBe(
-      "You were removed from Central Library on 2026-07-20."
+      "You were removed from the session at Central Library on 2026-07-20."
     );
   });
 
   it("uses a neutral fallback when the creator name is absent", () => {
     const session = {...baseSession, creatorName: undefined};
     expect(buildUpdatedMessage(session)).toBe(
-      "The session creator updated Central Library on 2026-07-20."
+      "The session creator updated the session at Central Library on 2026-07-20."
     );
   });
 });

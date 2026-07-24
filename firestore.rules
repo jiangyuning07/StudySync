@@ -1,18 +1,13 @@
-rules_version = "2";
-
-// NOTE: The repository had no firestore.rules file, which usually means the
-// project is running in the console's default (often open test-mode) rules.
-// Reconcile this file with whatever you currently have in the Firebase console
-// before deploying. The sessions/users/studySpaces blocks below are a sensible
-// baseline for what the app already does; the notifications block is the part
-// this issue actually needs.
+// NOTE: This file is the source of truth for Firestore rules in the repo, but
+// it may not match what is currently live. Reconcile it with the Firebase
+// console before deploying.
 //
 // Deploy with:  firebase deploy --only firestore:rules
 //
-// It is deliberately NOT wired into firebase.json yet. Doing so would make the
+// It is deliberately NOT wired into firebase.json. Doing so would make the
 // emulator enforce these rules during CI, and the current integration tests
 // create user docs with addDoc() (random doc id, uid in a field), which the
-// users rule below would reject. Tighten the tests to write users via
+// users rule below would reject. Tighten those tests to write users via
 // setDoc(doc(db, "users", uid)) and to authenticate, then wire this in.
 
 service cloud.firestore {
@@ -33,6 +28,22 @@ service cloud.firestore {
     match /studySpaces/{spaceId} {
       allow read: if isSignedIn();
       allow write: if false;
+
+      // Reviews are keyed by the author's uid, so "one review per user per
+      // space" is enforced by the path itself and edits only ever touch a
+      // document the caller owns.
+      match /reviews/{reviewId} {
+        allow read: if isSignedIn();
+
+        allow create, update: if isSignedIn()
+          && request.auth.uid == reviewId
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.comment.size() <= 300;
+
+        allow delete: if isSignedIn() && request.auth.uid == reviewId;
+      }
     }
 
     // Baseline session rules. Tightening join/leave/edit further is possible

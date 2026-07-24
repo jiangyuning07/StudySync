@@ -241,6 +241,11 @@ function MySessions() {
         <>
           <section>
             <h2 className="my-sessions-section">Sessions I Created</h2>
+            {createdSessions.length > 0 && (
+              <p className="session-result-count" aria-live="polite">
+                {createdSessions.length} {createdSessions.length === 1 ? "session" : "sessions"}
+              </p>
+            )}
 
             {createdSessions.length === 0 && (
               <p>You have not created any sessions yet.</p>
@@ -255,6 +260,11 @@ function MySessions() {
 
           <section>
             <h2 className="my-sessions-section">Sessions I Joined</h2>
+            {joinedSessions.length > 0 && (
+              <p className="session-result-count" aria-live="polite">
+                {joinedSessions.length} {joinedSessions.length === 1 ? "session" : "sessions"}
+              </p>
+            )}
 
             {joinedSessions.length === 0 && (
               <p>You have not joined any sessions yet.</p>

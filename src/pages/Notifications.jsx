@@ -109,7 +109,7 @@ function Notifications() {
         {unreadCount > 0 && (
           <button
             type="button"
-            className="session-action-button secondary-button"
+            className="session-action-button mark-read-button"
             onClick={markAllAsRead}
           >
             Mark all as read

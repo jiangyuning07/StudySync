@@ -141,8 +141,8 @@ function AllSessions() {
     if (!confirmed) return;
 
     try {
-      setSessionActionLoading(sessionId, true);
-      const sessionRef = doc(db, "sessions", sessionId);
+      setSessionActionLoading(session.id, true);
+      const sessionRef = doc(db, "sessions", session.id);
 
       await updateDoc(sessionRef, {
         status: "Cancelled",
@@ -154,7 +154,7 @@ function AllSessions() {
     } catch (error) {
       console.error("Failed to cancel session:", error);
     } finally {
-      setSessionActionLoading(sessionId, false);
+      setSessionActionLoading(session.id, false);
     }
   }
 

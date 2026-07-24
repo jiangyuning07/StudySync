@@ -1,4 +1,5 @@
 import {useState, useEffect} from "react";
+import {useNavigate} from "react-router-dom";
 import {addDoc, collection, serverTimestamp, getDocs, query, orderBy} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
@@ -22,6 +23,7 @@ function CreateSession() {
   const [maxParticipants, setMaxParticipants] = useState(2);
   const [message, setMessage] = useState("");
   const {currentUser} = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchStudySpaces() {
@@ -113,6 +115,7 @@ function CreateSession() {
       setStudyGoal("");
       setMaxParticipants(2);
       setMessage("Session created successfully!");
+      setTimeout(() => navigate("/my-sessions"), 1500);
     } catch (error) {
       setMessage(error.message);
     }

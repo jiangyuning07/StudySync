@@ -876,10 +876,12 @@ h2 {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .mark-read-button:hover {
   background: #1e3a8a;
   color: white;
+  border: 1px solid #1e3a8a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }

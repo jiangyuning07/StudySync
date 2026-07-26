@@ -3,9 +3,12 @@ import {useNavigate} from "react-router-dom";
 import {collection, doc, getDoc, getDocs, updateDoc, query, orderBy, arrayRemove, arrayUnion, runTransaction} from "firebase/firestore";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
-import {isInactive, getDisplayStatus, sortSessions, filterSessions, STUDY_MODES} from "../utils/sessionUtils";
+import {isInactive, sortSessions, filterSessions, STUDY_MODES} from "../utils/sessionUtils";
 import {notifySessionCancelled} from "../utils/notifications";
 import SessionLabels from "../components/SessionLabels";
+import SessionStatusPill from "../components/SessionStatusPill";
+import {formatSessionWhen} from "../utils/sessionFormat";
+import {useConfirm} from "../components/ConfirmDialog";
 
 function AllSessions() {
   const [sessions, setSessions] = useState([]);
@@ -19,6 +22,8 @@ function AllSessions() {
   const [showFilters, setShowFilters] = useState(false);
   const {currentUser} = useAuth();
   const navigate = useNavigate();
+  const {confirm, dialog} = useConfirm();
+  const [actionError, setActionError] = useState("");
 
   const moduleCodes = useMemo(
     () => [...new Set(sessions.map((session) => session.moduleCode?.trim().toUpperCase()).filter(Boolean))]
@@ -131,14 +136,19 @@ function AllSessions() {
       await fetchSessions();
     } catch (error) {
       console.error("Failed to join session:", error);
-      alert(error.message || "Failed to join session.");
+      setActionError("Could not join this session. It may be full or no longer available.");
     } finally {
       setSessionActionLoading(sessionId, false);
     }
   }
 
   async function handleCancelSession(session) {
-    const confirmed = window.confirm("Are you sure you want to cancel this session?");
+    const confirmed = await confirm({
+      title: "Cancel this session?",
+      message: "Everyone who joined will be notified.",
+      confirmLabel: "Cancel session",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -162,7 +172,12 @@ function AllSessions() {
   async function handleLeaveSession(sessionId) {
     if (!currentUser) return;
 
-    const confirmed = window.confirm("Are you sure you want to leave this session?");
+    const confirmed = await confirm({
+      title: "Leave this session?",
+      message: "You'll be removed from the participant list.",
+      confirmLabel: "Leave",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -204,13 +219,12 @@ function AllSessions() {
           }
         }}
       >
-        <h3>{session.studySpaceName}</h3>
-        <p><strong>Date:</strong> {session.date}</p>
-        <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
-        <p><strong>Duration:</strong> {session.duration} mins</p>
-        <p><strong>Created by:</strong> {creatorDisplayName}</p>
-        <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
-        <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
+        <div className="session-card-header">
+          <h3>{session.studySpaceName}</h3>
+          <SessionStatusPill session={session} />
+        </div>
+        <p className="session-when">{formatSessionWhen(session)}</p>
+        <p className="session-meta">{creatorDisplayName} · {participantCount} of {session.maxParticipants} joined</p>
         <SessionLabels session={session} />
 
         {!isInactive(session) && (
@@ -286,6 +300,8 @@ function AllSessions() {
           Filter
         </button>
       </div>
+
+      {actionError && <p className="message">{actionError}</p>}
 
       {loading && <p>Loading study sessions...</p>}
 
@@ -407,6 +423,8 @@ function AllSessions() {
           </section>
         </div>
       )}
+      
+      {dialog}
     </main>
   );
 }

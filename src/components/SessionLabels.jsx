@@ -10,23 +10,29 @@ function SessionLabels({session}) {
   const moduleCode = session.moduleCode?.trim().toUpperCase();
   const studyGoal = session.studyGoal?.trim();
   const studyMode = formatStudyMode(session.studyMode);
+
+  // The label text itself no longer carries a "Module:" / "Mode:" / "Goal:"
+  // prefix. The colour and shape already read as a tag, and a module code or a
+  // mode name is self-describing, so the prefix was pure noise. The full,
+  // prefixed description is kept in the title attribute for hover / screen
+  // readers, where the extra context is actually useful.
   const labels = [
     studyMode && {
       key: "mode",
       className: "mode-label",
-      text: `Mode: ${studyMode}`,
+      text: studyMode,
       title: `Study mode: ${studyMode}`,
     },
     moduleCode && {
       key: "module",
       className: "module-label",
-      text: `Module: ${moduleCode}`,
+      text: moduleCode,
       title: `Module: ${moduleCode}`,
     },
     studyGoal && {
       key: "goal",
       className: "goal-label",
-      text: `Goal: ${studyGoal}`,
+      text: studyGoal,
       title: `Study goal: ${studyGoal}`,
     },
   ].filter(Boolean);

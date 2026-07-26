@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
 import RecommendedSessionCard from "../components/RecommendedSessionCard";
 import StarRating from "../components/StarRating";
@@ -99,10 +99,14 @@ function Home() {
 
   return (
     <main className="page">
-      <h1>StudySync</h1>
-      <p>
-        Find suitable study spaces and coordinate study sessions with other NUS students.
-      </p>
+      <section className="home-hero">
+        <h1>Find your spot. Study together.</h1>
+        <p>Discover study spaces across NUS and join sessions that fit how you work.</p>
+        <div className="home-hero-actions">
+          <Link to="/spaces" className="home-hero-button primary">Browse spaces</Link>
+          <Link to="/create-session" className="home-hero-button secondary">Create a session</Link>
+        </div>
+      </section>
 
       <section className="discovery">
         <h2>Discovery</h2>

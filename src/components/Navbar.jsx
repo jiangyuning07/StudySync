@@ -43,28 +43,24 @@ function UserMenu({currentUser, onLogout}) {
   useEffect(() => {
     // Only fetch when the menu opens, only once per session, and never on every
     // page just because the Navbar is mounted.
-    if (!isOpen || !currentUser?.uid) return undefined;
-    if (summaryRef.current) return undefined; // already fetched this session
+    if (!isOpen || !currentUser?.uid) return;
+    if (summaryRef.current) return; // already fetched this session
 
-    let cancelled = false;
     summaryRef.current = true;
     setSummaryLoading(true);
 
     fetchJoinedSessions(currentUser.uid)
       .then((sessions) => {
-        if (!cancelled) setSummary(summarizeAttendance(sessions, currentUser.uid));
+        const s = summarizeAttendance(sessions, currentUser.uid);
+        setSummary(s);
       })
       .catch((error) => {
         console.error("Failed to load attendance summary:", error);
-        if (!cancelled) summaryRef.current = false; // allow a retry on reopen
+        summaryRef.current = false; // allow a retry on reopen
       })
       .finally(() => {
-        if (!cancelled) setSummaryLoading(false);
+        setSummaryLoading(false);
       });
-
-    return () => {
-      cancelled = true;
-    };
   }, [isOpen, currentUser]);
 
   async function handleLogoutClick() {

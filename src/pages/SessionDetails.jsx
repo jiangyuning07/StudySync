@@ -6,11 +6,12 @@ import {useAuth} from "../AuthContext";
 import {notifySessionCancelled} from "../utils/notifications";
 import {getDisplayStatus, isInactive} from "../utils/sessionUtils";
 import SessionLabels from "../components/SessionLabels";
+import {useConfirm} from "../components/ConfirmDialog";
 
 // Fetch participant details for a single session
 async function getSessionDetails(id) {
   const sessionSnap = await getDoc(doc(db, "sessions", id));
-
+  
   if (!sessionSnap.exists()) {
     return {
       sessionData: null,
@@ -52,6 +53,7 @@ function SessionDetails() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const {confirm, dialog} = useConfirm();
 
   useEffect(() => {
     let ignore = false;
@@ -82,7 +84,13 @@ function SessionDetails() {
   async function handleCancelSession() {
     if (!session) return;
 
-    const confirmed = window.confirm("Are you sure you want to cancel this session?");
+    
+    const confirmed = await confirm({
+      title: "Cancel this session?",
+      message: "Everyone who joined will be notified.",
+      confirmLabel: "Cancel session",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -203,6 +211,7 @@ function SessionDetails() {
       </div>
 
       {message && <p className="message">{message}</p>}
+      {dialog}
     </main>
   );
 }

@@ -85,15 +85,15 @@ function Home() {
     const formatted = formatAverageRating(summary?.averageRating, summary?.reviewCount);
 
     if (!formatted) {
-      return <span className="space-rating-empty">No reviews yet</span>;
+      return <p className="space-rating space-rating-empty">No reviews yet</p>;
     }
 
     return (
-      <span className="space-rating">
+      <p className="space-rating">
         <StarRating value={summary.averageRating} />
         <span className="space-rating-value">{formatted}</span>
         <span className="space-rating-count">({summary.reviewCount})</span>
-      </span>
+      </p>
     );
   }
 
@@ -146,7 +146,7 @@ function Home() {
                   {spaceRecs.map((space) => (
                     <div
                       key={space.id}
-                      className="card recommendation-card"
+                      className="card recommendation-card recommendation-space-card"
                       role="button"
                       tabIndex={0}
                       onClick={() => navigate("/spaces")}

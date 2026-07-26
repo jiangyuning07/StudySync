@@ -280,6 +280,13 @@ h2 {
   margin-top: 32px;
 }
 
+.study-spaces-heading h2,
+.discovery > h2 {
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .study-spaces-heading h2 {
   margin-bottom: 0;
 }
@@ -1013,7 +1020,8 @@ h2 {
 
 /* --- Rating row on the directory card --- */
 
-.study-space-card .space-rating {
+.study-space-card .space-rating,
+.recommendation-space-card .space-rating {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1030,7 +1038,8 @@ h2 {
   color: #6b7280;
 }
 
-.study-space-card .space-rating-empty {
+.study-space-card .space-rating-empty,
+.recommendation-space-card .space-rating-empty {
   color: #6b7280;
   font-size: 14px;
 }

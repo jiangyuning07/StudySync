@@ -193,7 +193,7 @@ function AllSessions() {
 
     return (
       <div
-        className="card session-card"
+        className={`card session-card${isInactive(session) ? " session-inactive" : ""}`}
         key={session.id}
         role="button"
         tabIndex={0}
@@ -203,7 +203,6 @@ function AllSessions() {
             navigate(`/sessions/${session.id}`);
           }
         }}
-        style={{opacity: isInactive(session) ? 0.5 : 1}}
       >
         <h3>{session.studySpaceName}</h3>
         <p><strong>Date:</strong> {session.date}</p>

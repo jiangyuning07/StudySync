@@ -307,12 +307,19 @@ function StudySpaces() {
 
                       {renderRatingRow(space.id)}
 
-                      <p><strong>Address:</strong> {space.address}</p>
-                      <p><strong>Opening Hours:</strong> {space.openingHours}</p>
-                      <p><strong>Indoor:</strong> {space.indoor ? "Yes" : "No"}</p>
-                      <p><strong>Wifi:</strong> {space.wifi ? "Yes" : "No"}</p>
-                      <p><strong>Power Outlets:</strong> {space.powerOutlets ? "Yes" : "No"}</p>
-                      <p><strong>Study Mode:</strong> {space.studyMode}</p>
+                      <p className="space-meta">{space.address}</p>
+                      <p className="space-meta">{space.openingHours} · {space.studyMode}</p>
+                      <div className="space-amenities">
+                        <span className={`amenity-chip ${space.indoor ? "present" : "absent"}`}>
+                          {space.indoor ? "✓ " : ""}Indoor
+                        </span>
+                        <span className={`amenity-chip ${space.wifi ? "present" : "absent"}`}>
+                          {space.wifi ? "✓ " : ""}Wifi
+                        </span>
+                        <span className={`amenity-chip ${space.powerOutlets ? "present" : "absent"}`}>
+                          {space.powerOutlets ? "✓ " : ""}Power
+                        </span>
+                      </div>
 
                       <button
                         type="button"

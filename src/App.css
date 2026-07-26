@@ -1640,3 +1640,236 @@ h2 {
 .session-card.session-inactive p {
   color: var(--color-text-muted);
 }
+
+/* ============================================================
+   Component redesign: session card (1A), space chips (2B),
+   confirm dialog (3), home hero (4A).
+   Append to the end of src/App.css.
+   ============================================================ */
+
+/* --- 1A: session card tidy --- */
+
+.session-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.session-card-header h3 {
+  margin: 0;
+}
+
+.status-pill {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+.status-pill-active {
+  color: var(--color-success-text-strong);
+  background: var(--color-success-bg-strong);
+}
+
+.status-pill-completed {
+  color: var(--color-text-muted);
+  background: var(--color-surface-muted);
+}
+
+.status-pill-cancelled {
+  color: var(--color-danger-text);
+  background: var(--color-danger-bg);
+}
+
+.session-when {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--color-text-strong);
+}
+
+.session-meta {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+/* --- 2B: study space amenity chips --- */
+
+.space-meta {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.space-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.amenity-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+}
+
+.amenity-chip.present {
+  color: var(--color-success-text-strong);
+  background: var(--color-success-bg-strong);
+}
+
+.amenity-chip.absent {
+  color: var(--color-text-subtle);
+  background: var(--color-surface-muted);
+  text-decoration: line-through;
+}
+
+/* --- 3: confirm dialog --- */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.dialog-box {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: var(--color-text-strong);
+}
+
+.dialog-message {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialog-button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.dialog-cancel {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border-color: var(--color-border);
+}
+
+.dialog-cancel:hover {
+  background: var(--color-accent-bg);
+}
+
+.dialog-confirm {
+  background: var(--color-accent);
+  color: white;
+}
+
+.dialog-confirm:hover {
+  background: var(--color-accent-hover);
+}
+
+.dialog-confirm-destructive {
+  background: var(--color-danger);
+  color: white;
+}
+
+.dialog-confirm-destructive:hover {
+  background: var(--color-danger-text);
+}
+
+.dialog-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* --- 4A: home hero --- */
+
+.home-hero {
+  background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-accent) 100%);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  color: white;
+}
+
+.home-hero h1 {
+  margin: 0 0 10px;
+  font-size: 26px;
+  color: white;
+}
+
+.home-hero p {
+  margin: 0 0 18px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+  max-width: 52ch;
+}
+
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.home-hero-button {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.home-hero-button.primary {
+  background: white;
+  color: var(--color-brand);
+}
+
+.home-hero-button.secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.home-hero-button:hover {
+  transform: translateY(-1px);
+}
+
+.home-hero-button:focus-visible {
+  outline: 3px solid var(--focus-ring-on-brand);
+  outline-offset: 3px;
+}

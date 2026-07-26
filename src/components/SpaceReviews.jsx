@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from "react";
 import StarRating from "./StarRating";
+import {useConfirm} from "./ConfirmDialog";
 import {
   REVIEW_COMMENT_MAX_LENGTH,
   formatRelativeTime,
@@ -44,6 +45,7 @@ function SpaceReviews({spaceId, currentUser, onSummaryChange}) {
   const [showAll, setShowAll] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const {confirm, dialog} = useConfirm();
 
   const {ownReview, otherReviews} = splitOwnReview(reviews, currentUser?.uid);
   const visibleReviews = showAll
@@ -109,7 +111,12 @@ function SpaceReviews({spaceId, currentUser, onSummaryChange}) {
   }
 
   async function handleDelete() {
-    const confirmed = window.confirm("Delete your review for this study space?");
+    const confirmed = await confirm({
+      title: "Delete your review?",
+      message: "This will remove your rating and comment for this space.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -226,7 +233,9 @@ function SpaceReviews({spaceId, currentUser, onSummaryChange}) {
           </button>
         )}
       </section>
+      {dialog}
     </div>
+
   );
 }
 

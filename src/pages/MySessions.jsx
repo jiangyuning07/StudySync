@@ -3,11 +3,14 @@ import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
 import {collection, query, where, getDoc, getDocs, doc, updateDoc, arrayRemove} from "firebase/firestore";
-import {isInactive, getDisplayStatus, sortSessions} from "../utils/sessionUtils";
+import {isInactive, sortSessions} from "../utils/sessionUtils";
 import {getAvailableAction} from "../utils/attendanceUtils";
 import {checkIn, checkOut} from "../utils/attendance";
 import {notifySessionCancelled} from "../utils/notifications";
 import SessionLabels from "../components/SessionLabels";
+import SessionStatusPill from "../components/SessionStatusPill";
+import {formatSessionWhen} from "../utils/sessionFormat";
+import {useConfirm} from "../components/ConfirmDialog";
 
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
@@ -18,6 +21,7 @@ function MySessions() {
   const [creatorProfiles, setCreatorProfiles] = useState({});
   const {currentUser} = useAuth();
   const navigate = useNavigate();
+  const {confirm, dialog} = useConfirm();
 
   const setSessionActionLoading = (sessionId, isLoading) => {
     setActionLoading((prev) => ({
@@ -110,7 +114,12 @@ function MySessions() {
   }, [currentUser]);
 
   async function handleCancelSession(session) {
-    const confirmed = window.confirm("Are you sure you want to cancel this session?");
+    const confirmed = await confirm({
+      title: "Cancel this session?",
+      message: "Everyone who joined will be notified.",
+      confirmLabel: "Cancel session",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -134,7 +143,12 @@ function MySessions() {
   async function handleLeaveSession(sessionId) {
     if (!currentUser) return;
 
-    const confirmed = window.confirm("Are you sure you want to leave this session?");
+    const confirmed = await confirm({
+      title: "Leave this session?",
+      message: "You'll be removed from the participant list.",
+      confirmLabel: "Leave",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     try {
@@ -201,16 +215,15 @@ function MySessions() {
           }
         }}
       >
-        <h3>{session.studySpaceName}</h3>
-        <p><strong>Date:</strong> {session.date}</p>
-        <p><strong>Time:</strong> {session.startTime} - {session.endTime}</p>
-        <p><strong>Duration:</strong> {session.duration} mins</p>
-        {type === "joined" && (
-          <p><strong>Created by:</strong> {creatorName}</p>
-        )}
-
-        <p><strong>Participants:</strong> {participantCount}/{session.maxParticipants}</p>
-        <p><strong>Status:</strong> {getDisplayStatus(session)}</p>
+        <div className="session-card-header">
+          <h3>{session.studySpaceName}</h3>
+          <SessionStatusPill session={session} />
+        </div>
+        <p className="session-when">{formatSessionWhen(session)}</p>
+        <p className="session-meta">
+          {type === "joined" && `${creatorName} · `}
+          {participantCount} of {session.maxParticipants} joined
+        </p>
         <SessionLabels session={session} />
 
         <div className="session-actions">
@@ -325,6 +338,8 @@ function MySessions() {
           </section>
         </>
       )}
+
+      {dialog}
     </main>
   );
 }

@@ -14,6 +14,7 @@ import {
   STUDY_MODES,
   STUDY_GOAL_MAX_LENGTH,
 } from "../utils/sessionUtils";
+import {useConfirm} from "../components/ConfirmDialog";
 
 function EditSession() {
   const {id} = useParams();
@@ -36,6 +37,7 @@ function EditSession() {
   const [sessionCreatorId, setSessionCreatorId] = useState("");
   const [removedParticipantId, setRemovedParticipantId] = useState([]);
   const [originalDetails, setOriginalDetails] = useState(null);
+  const {confirm, dialog} = useConfirm();
 
   function calculateDuration(start, end) {
     const [startH, startM] = start.split(":").map(Number);
@@ -131,7 +133,7 @@ function EditSession() {
     fetchStudySpacesAndSession();
   }, [id, currentUser.uid, navigate]);
 
-  function handleRemoveParticipant(participant) {
+  async function handleRemoveParticipant(participant) {
     // Standalone safeguard to ensure session creators cannot be removed from session
     if (participant.uid === sessionCreatorId) {
       setMessage("Session creator cannot be removed.");
@@ -139,8 +141,12 @@ function EditSession() {
     }
 
     const label = participant.name;
-    const confirmed = window.confirm(`Are you sure you want to remove ${label} from this session?`);
-
+    const confirmed = await confirm({
+      title: "Remove participant?",
+      message: `Remove ${label} from this session?`,
+      confirmLabel: "Remove",
+      destructive: true,
+    });
     if (!confirmed) return;
 
     setParticipants((currentParticipants) =>
@@ -384,6 +390,7 @@ function EditSession() {
       </form>
 
       {message && <p className="message">{message}</p>}
+      {dialog}
     </main>
   );
 }

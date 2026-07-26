@@ -135,6 +135,25 @@ service cloud.firestore {
           && request.resource.data.participants.size() == after.size();
       }
 
+      // A participant may set only their OWN attendance key, only on a session they
+      // have joined, only while the session is Active, and without touching any other
+      // field. This mirrors the participants pattern: the affectedKeys check pins the
+      // write down to exactly attendance.{uid} and nothing else. 
+
+      function isValidCheckIn() {
+        let changed =
+          request.resource.data.diff(resource.data).affectedKeys();
+
+        return isSignedIn()
+          && resource.data.status == "Active"
+          && request.auth.uid in resource.data.participants
+          && changed.hasOnly(["attendance"])
+          && request.resource.data.attendance.diff(
+               resource.data.get("attendance", {})
+             ).affectedKeys().hasOnly([request.auth.uid])
+          && request.resource.data.attendance[request.auth.uid] in ["in", "out"];
+      }
+ 
       // Creators may edit their own session. They cannot transfer ownership,
       // replace the creation time, add participants manually, remove
       // themselves, exceed the participant limit, or reactivate a cancelled
@@ -182,7 +201,8 @@ service cloud.firestore {
 
       allow update: if isValidCreatorUpdate()
                     || isValidJoin()
-                    || isValidLeave();
+                    || isValidLeave()
+                    || isValidCheckIn();
 
       allow delete: if isSignedIn()
         && resource.data.creatorId == request.auth.uid;

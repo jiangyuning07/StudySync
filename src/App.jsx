@@ -12,6 +12,7 @@ import MySessions from "./pages/MySessions";
 import EditSession from "./pages/EditSession";
 import SessionDetails from "./pages/SessionDetails";
 import Notifications from "./pages/Notifications";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -96,6 +97,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

@@ -16,6 +16,7 @@ function AllSessions() {
   const [moduleCodeFilter, setModuleCodeFilter] = useState("");
   const [studyGoalFilter, setStudyGoalFilter] = useState("");
   const [activeOnlyFilter, setActiveOnlyFilter] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const {currentUser} = useAuth();
   const navigate = useNavigate();
 
@@ -274,7 +275,18 @@ function AllSessions() {
 
   return (
     <main className="page all-sessions-page">
-      <h1>All Study Sessions</h1>
+      <div className="all-sessions-heading">
+        <h1>All Study Sessions</h1>
+        <button
+          type="button"
+          className={`all-sessions-filter-toggle${showFilters ? " active" : ""}`}
+          aria-expanded={showFilters}
+          aria-controls="all-sessions-directory"
+          onClick={() => setShowFilters((previous) => !previous)}
+        >
+          Filter
+        </button>
+      </div>
 
       {loading && <p>Loading study sessions...</p>}
 
@@ -283,95 +295,100 @@ function AllSessions() {
       )}
 
       {!loading && sessions.length > 0 && (
-        <div className="all-sessions-layout">
-          <aside className="session-filters" aria-label="Filter study sessions">
-            <div className="session-filters-header">
-              <h2>Filter sessions</h2>
-              {hasActiveFilters && (
-                <button type="button" onClick={clearFilters}>Clear all</button>
-              )}
-            </div>
-
-            <div className="session-filter-group">
-              <label className="session-filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={activeOnlyFilter}
-                  onChange={(event) => setActiveOnlyFilter(event.target.checked)}
-                />
-                <span>Active sessions only</span>
-              </label>
-            </div>
-
-            <div className="session-filter-group">
-              <label htmlFor="study-mode-filter">Study mode</label>
-              <select
-                id="study-mode-filter"
-                value={studyModeFilter}
-                onChange={(event) => setStudyModeFilter(event.target.value)}
-              >
-                <option value="">All study modes</option>
-                {STUDY_MODES.map((studyMode) => (
-                  <option key={studyMode} value={studyMode}>{studyMode}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="session-filter-group">
-              <label htmlFor="module-code-filter">Module code</label>
-              <div className="session-filter-input-wrapper module-code-filter-input-wrapper">
-                <input
-                  id="module-code-filter"
-                  list="module-code-options"
-                  value={moduleCodeFilter}
-                  onChange={(event) => setModuleCodeFilter(event.target.value.toUpperCase())}
-                  type="text"
-                  placeholder="Type or select a code"
-                  autoComplete="off"
-                  autoCapitalize="characters"
-                />
-                {moduleCodeFilter && (
-                  <button
-                    type="button"
-                    className="session-filter-clear"
-                    onClick={() => setModuleCodeFilter("")}
-                    aria-label="Clear module code"
-                  >
-                    ×
-                  </button>
+        <div
+          id="all-sessions-directory"
+          className={`all-sessions-layout${showFilters ? " filters-visible" : ""}`}
+        >
+          {showFilters && (
+            <aside className="session-filters" aria-label="Filter study sessions">
+              <div className="session-filters-header">
+                <h2>Filter sessions</h2>
+                {hasActiveFilters && (
+                  <button type="button" onClick={clearFilters}>Clear all</button>
                 )}
               </div>
-              <datalist id="module-code-options">
-                {moduleCodes.map((moduleCode) => (
-                  <option key={moduleCode} value={moduleCode} />
-                ))}
-              </datalist>
-            </div>
 
-            <div className="session-filter-group">
-              <label htmlFor="study-goal-filter">Study goal</label>
-              <div className="session-filter-input-wrapper">
-                <input
-                  id="study-goal-filter"
-                  value={studyGoalFilter}
-                  onChange={(event) => setStudyGoalFilter(event.target.value)}
-                  type="text"
-                  placeholder="Search by keywords"
-                />
-                {studyGoalFilter && (
-                  <button
-                    type="button"
-                    className="session-filter-clear"
-                    onClick={() => setStudyGoalFilter("")}
-                    aria-label="Clear study goal"
-                  >
-                    ×
-                  </button>
-                )}
+              <div className="session-filter-group">
+                <label className="session-filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={activeOnlyFilter}
+                    onChange={(event) => setActiveOnlyFilter(event.target.checked)}
+                  />
+                  <span>Active sessions only</span>
+                </label>
               </div>
-              <small>Use one or more words from the goal.</small>
-            </div>
-          </aside>
+
+              <div className="session-filter-group">
+                <label htmlFor="study-mode-filter">Study mode</label>
+                <select
+                  id="study-mode-filter"
+                  value={studyModeFilter}
+                  onChange={(event) => setStudyModeFilter(event.target.value)}
+                >
+                  <option value="">All study modes</option>
+                  {STUDY_MODES.map((studyMode) => (
+                    <option key={studyMode} value={studyMode}>{studyMode}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="session-filter-group">
+                <label htmlFor="module-code-filter">Module code</label>
+                <div className="session-filter-input-wrapper module-code-filter-input-wrapper">
+                  <input
+                    id="module-code-filter"
+                    list="module-code-options"
+                    value={moduleCodeFilter}
+                    onChange={(event) => setModuleCodeFilter(event.target.value.toUpperCase())}
+                    type="text"
+                    placeholder="Type or select a code"
+                    autoComplete="off"
+                    autoCapitalize="characters"
+                  />
+                  {moduleCodeFilter && (
+                    <button
+                      type="button"
+                      className="session-filter-clear"
+                      onClick={() => setModuleCodeFilter("")}
+                      aria-label="Clear module code"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <datalist id="module-code-options">
+                  {moduleCodes.map((moduleCode) => (
+                    <option key={moduleCode} value={moduleCode} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div className="session-filter-group">
+                <label htmlFor="study-goal-filter">Study goal</label>
+                <div className="session-filter-input-wrapper">
+                  <input
+                    id="study-goal-filter"
+                    value={studyGoalFilter}
+                    onChange={(event) => setStudyGoalFilter(event.target.value)}
+                    type="text"
+                    placeholder="Search by keywords"
+                  />
+                  {studyGoalFilter && (
+                    <button
+                      type="button"
+                      className="session-filter-clear"
+                      onClick={() => setStudyGoalFilter("")}
+                      aria-label="Clear study goal"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <small>Use one or more words from the goal.</small>
+              </div>
+            </aside>
+          )}
 
           <section className="session-results">
             <p className="session-result-count" aria-live="polite">

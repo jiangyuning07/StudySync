@@ -2,8 +2,10 @@ import {useCallback, useEffect, useState} from "react";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {collection, query, where, getDoc, getDocs, orderBy, doc, updateDoc, arrayRemove} from "firebase/firestore";
-import {isExpired, isInactive, getDisplayStatus, getSessionStartMillis, sortSessions} from "../utils/sessionUtils";
+import {collection, query, where, getDoc, getDocs, doc, updateDoc, arrayRemove} from "firebase/firestore";
+import {isInactive, getDisplayStatus, sortSessions} from "../utils/sessionUtils";
+import {getAvailableAction} from "../utils/attendanceUtils";
+import {checkIn, checkOut} from "../utils/attendance";
 import {notifySessionCancelled} from "../utils/notifications";
 import SessionLabels from "../components/SessionLabels";
 
@@ -151,11 +153,40 @@ function MySessions() {
     }
   }
 
+  // Check-in / check-out. The button that calls this is only shown when
+  // getAvailableAction permits it, but we recompute the action here too so a
+  // stale button (window closed while the page sat open) cannot write anyway.
+  async function handleAttendance(session) {
+    if (!currentUser) return;
+
+    const action = getAvailableAction(session, currentUser.uid);
+    if (!action) return;
+
+    try {
+      setSessionActionLoading(session.id, true);
+
+      if (action === "check-in") {
+        await checkIn(session.id, currentUser.uid);
+      } else {
+        await checkOut(session.id, currentUser.uid);
+      }
+
+      await fetchMySessions();
+    } catch (error) {
+      console.error("Failed to update attendance:", error);
+    } finally {
+      setSessionActionLoading(session.id, false);
+    }
+  }
+
   function renderSessionCard(session, type) {
     const participantCount = session.participants?.length || 0;
     const creatorProfile = creatorProfiles[session.creatorId];
     const creatorName = creatorProfile?.name || "Unknown creator";
     const isActionLoading = !!actionLoading[session.id];
+    const attendanceAction = type === "joined"
+      ? getAvailableAction(session, currentUser?.uid)
+      : null;
 
     return (
       <div
@@ -207,6 +238,23 @@ function MySessions() {
               }}
             >
               {isActionLoading ? "Cancelling..." : "Cancel"}
+            </button>
+          )}
+
+          {type === "joined" && attendanceAction && (
+            <button
+              className="session-action-button checkin-button"
+              disabled={isActionLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAttendance(session);
+              }}
+            >
+              {isActionLoading
+                ? "Saving..."
+                : attendanceAction === "check-in"
+                  ? "Check in"
+                  : "Check out"}
             </button>
           )}
 

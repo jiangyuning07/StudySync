@@ -2,6 +2,8 @@ import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
 import {useEffect, useRef, useState} from "react";
 import NotificationBell from "./NotificationBell";
+import {fetchJoinedSessions} from "../utils/attendance";
+import {summarizeAttendance, formatAttendanceRate} from "../utils/attendanceUtils";
 
 function getUserInitial(currentUser) {
   const source = currentUser?.displayName || currentUser?.email || "User";
@@ -10,7 +12,10 @@ function getUserInitial(currentUser) {
 
 function UserMenu({currentUser, onLogout}) {
   const [isOpen, setIsOpen] = useState(false);
+  const [summary, setSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -34,9 +39,43 @@ function UserMenu({currentUser, onLogout}) {
     };
   }, [isOpen]);
 
+  // Fetch the attendance summary only when the menu is actually opened, and only
+  // once per open lifecycle. The dropdown lives on every page, so fetching on
+  // mount would add a Firestore read to every navigation for a number most
+  // users never look at.
+  useEffect(() => {
+    if (!isOpen || summary || summaryLoading || !currentUser?.uid) return;
+
+    let cancelled = false;
+
+    async function loadSummary() {
+      setSummaryLoading(true);
+      try {
+        const sessions = await fetchJoinedSessions(currentUser.uid);
+        if (!cancelled) setSummary(summarizeAttendance(sessions, currentUser.uid));
+      } catch (error) {
+        console.error("Failed to load attendance summary:", error);
+      } finally {
+        if (!cancelled) setSummaryLoading(false);
+      }
+    }
+
+    loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+    
+  }, [isOpen, summary, summaryLoading, currentUser]);
+
   async function handleLogoutClick() {
     setIsOpen(false);
     await onLogout();
+  }
+
+  function goToProfile() {
+    setIsOpen(false);
+    navigate("/profile");
   }
 
   return (
@@ -61,6 +100,22 @@ function UserMenu({currentUser, onLogout}) {
           <div className="user-dropdown-header">
             <strong>{currentUser?.displayName || "Account"}</strong>
             {currentUser?.email && <small>{currentUser.email}</small>}
+          </div>
+
+          <div className="user-dropdown-attendance">
+            {summaryLoading && !summary ? (
+              <small>Loading your attendance...</small>
+            ) : summary ? (
+              <small>
+                Joined {summary.joined} {summary.joined === 1 ? "session" : "sessions"} ·{" "}
+                {formatAttendanceRate(summary.rate)} attendance
+              </small>
+            ) : (
+              <small>Attendance record</small>
+            )}
+            <button type="button" className="user-dropdown-link" onClick={goToProfile}>
+              Show past sessions
+            </button>
           </div>
 
           <button type="button" className="user-dropdown-item" onClick={handleLogoutClick}>

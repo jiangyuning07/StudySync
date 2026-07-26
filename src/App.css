@@ -302,7 +302,9 @@ h2 {
 }
 
 .study-spaces-filter-toggle:hover,
-.study-spaces-filter-toggle.active {
+.study-spaces-filter-toggle.active,
+.all-sessions-filter-toggle:hover,
+.all-sessions-filter-toggle.active {
   color: #1e3a8a;
   text-decoration: underline;
 }
@@ -342,12 +344,31 @@ h2 {
   align-items: start;
 }
 
+.all-sessions-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.all-sessions-filter-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .all-sessions-layout {
+  margin-top: 24px;
+}
+
+.all-sessions-layout.filters-visible {
   display: grid;
   grid-template-columns: minmax(250px, 1fr) minmax(0, 760px);
   gap: 24px;
   align-items: start;
-  margin-top: 24px;
 }
 
 .session-filters {
@@ -508,7 +529,7 @@ h2 {
 }
 
 @media (max-width: 800px) {
-  .all-sessions-layout,
+  .all-sessions-layout.filters-visible,
   .study-spaces-layout.filters-visible {
     grid-template-columns: 1fr;
   }

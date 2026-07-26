@@ -16,6 +16,7 @@ function UserMenu({currentUser, onLogout}) {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const summaryRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -39,34 +40,32 @@ function UserMenu({currentUser, onLogout}) {
     };
   }, [isOpen]);
 
-  // Fetch the attendance summary only when the menu is actually opened, and only
-  // once per open lifecycle. The dropdown lives on every page, so fetching on
-  // mount would add a Firestore read to every navigation for a number most
-  // users never look at.
   useEffect(() => {
-    if (!isOpen || summary || summaryLoading || !currentUser?.uid) return;
+    // Only fetch when the menu opens, only once per session, and never on every
+    // page just because the Navbar is mounted.
+    if (!isOpen || !currentUser?.uid) return undefined;
+    if (summaryRef.current) return undefined; // already fetched this session
 
     let cancelled = false;
+    summaryRef.current = true;
+    setSummaryLoading(true);
 
-    async function loadSummary() {
-      setSummaryLoading(true);
-      try {
-        const sessions = await fetchJoinedSessions(currentUser.uid);
+    fetchJoinedSessions(currentUser.uid)
+      .then((sessions) => {
         if (!cancelled) setSummary(summarizeAttendance(sessions, currentUser.uid));
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Failed to load attendance summary:", error);
-      } finally {
+        if (!cancelled) summaryRef.current = false; // allow a retry on reopen
+      })
+      .finally(() => {
         if (!cancelled) setSummaryLoading(false);
-      }
-    }
-
-    loadSummary();
+      });
 
     return () => {
       cancelled = true;
     };
-    
-  }, [isOpen, summary, summaryLoading, currentUser]);
+  }, [isOpen, currentUser]);
 
   async function handleLogoutClick() {
     setIsOpen(false);

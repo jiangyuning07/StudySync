@@ -16,7 +16,6 @@ function UserMenu({currentUser, onLogout}) {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
-  const summaryRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -41,12 +40,12 @@ function UserMenu({currentUser, onLogout}) {
   }, [isOpen]);
 
   useEffect(() => {
-    // Only fetch when the menu opens, only once per session, and never on every
-    // page just because the Navbar is mounted.
+    // Fetch whenever the menu opens so a recent check-in is reflected without
+    // requiring a full page reload.
     if (!isOpen || !currentUser?.uid) return;
-    if (summaryRef.current) return; // already fetched this session
 
-    summaryRef.current = true;
+    // Opening the menu initiates this external Firestore synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSummaryLoading(true);
 
     fetchJoinedSessions(currentUser.uid)
@@ -56,7 +55,6 @@ function UserMenu({currentUser, onLogout}) {
       })
       .catch((error) => {
         console.error("Failed to load attendance summary:", error);
-        summaryRef.current = false; // allow a retry on reopen
       })
       .finally(() => {
         setSummaryLoading(false);

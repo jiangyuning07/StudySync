@@ -7,6 +7,7 @@
 // weighted sum over those is transparent, cheap, and easy to defend in a review.
 
 import {isInactive, getSessionStartMillis} from "./sessionUtils";
+import {didAttend} from "./attendanceUtils";
 
 // How much each matching signal adds to a session's score. Kept as one object so
 // the weighting lives in a single visible place and is trivial to tune.
@@ -21,12 +22,11 @@ export const SESSION_WEIGHTS = {
 // short enough that "soon" still carries meaning.
 export const STARTING_SOON_MS = 48 * 60 * 60 * 1000;
 
-// Builds a profile of what the user tends to study, from the sessions they have
-// created or joined. `participants` already holds the creator's uid at creation
-// time, so membership in that array is the single source of truth for "attended".
+// Builds a profile only from sessions where the user actually checked in.
+// Registration, missed sessions, and cancelled sessions are not attendance.
 export function buildUserProfile(userSessions, uid) {
   const attended = (userSessions || []).filter((session) =>
-    (session.participants || []).includes(uid)
+    (session.participants || []).includes(uid) && didAttend(session, uid)
   );
 
   const moduleCodes = new Set();

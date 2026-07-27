@@ -16,6 +16,8 @@ const LABEL_CLASS = {
   "Checked in": "attendance-tag-in",
   Missed: "attendance-tag-missed",
   Upcoming: "attendance-tag-upcoming",
+  Ongoing: "attendance-tag-upcoming",
+  Cancelled: "attendance-tag-cancelled",
 };
 
 function Profile() {
@@ -25,6 +27,7 @@ function Profile() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     let cancelled = false;
@@ -47,7 +50,12 @@ function Profile() {
     };
   }, [currentUser.uid]);
 
-  const summary = summarizeAttendance(sessions, currentUser.uid);
+  const summary = summarizeAttendance(sessions, currentUser.uid, now);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Most recent first, so the list opens on what the user just did.
   const orderedSessions = [...sessions].sort(
@@ -98,7 +106,7 @@ function Profile() {
           ) : (
             <ul className="attendance-record-list">
               {orderedSessions.map((session) => {
-                const label = getAttendanceLabel(session, currentUser.uid);
+                const label = getAttendanceLabel(session, currentUser.uid, now);
                 return (
                   <li
                     key={session.id}
@@ -119,9 +127,11 @@ function Profile() {
                         {session.date} · {session.startTime}
                       </span>
                     </div>
-                    <span className={`attendance-tag ${LABEL_CLASS[label] || ""}`}>
-                      {label}
-                    </span>
+                    {label && (
+                      <span className={`attendance-tag ${LABEL_CLASS[label] || ""}`}>
+                        {label}
+                      </span>
+                    )}
                   </li>
                 );
               })}

@@ -6,6 +6,7 @@ import {
   isInactive,
   getDisplayStatus,
   getSessionStartMillis,
+  isBeforeSessionStart,
   sortSessions,
   filterSessions,
 } from "./sessionUtils";
@@ -114,6 +115,19 @@ describe("getSessionStartMillis", () => {
     const early = getSessionStartMillis(makeSession({ startTime: "09:00" }));
     const late = getSessionStartMillis(makeSession({ startTime: "14:00" }));
     expect(early).toBeLessThan(late);
+  });
+});
+
+describe("isBeforeSessionStart", () => {
+  const session = makeSession({date: "2026-07-27", startTime: "10:00"});
+
+  it("returns true only before the session starts", () => {
+    expect(isBeforeSessionStart(session, new Date("2026-07-27T09:59:59"))).toBe(true);
+    expect(isBeforeSessionStart(session, new Date("2026-07-27T10:00:00"))).toBe(false);
+  });
+
+  it("returns false when the session start is invalid", () => {
+    expect(isBeforeSessionStart({date: "2026-07-27"})).toBe(false);
   });
 });
 

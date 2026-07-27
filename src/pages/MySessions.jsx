@@ -2,40 +2,27 @@ import {useCallback, useEffect, useState} from "react";
 import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {collection, query, where, getDoc, getDocs, doc, updateDoc, arrayRemove} from "firebase/firestore";
+import {collection, query, where, getDoc, getDocs, doc} from "firebase/firestore";
 import {isInactive, sortSessions} from "../utils/sessionUtils";
-import {getAvailableAction, canLeaveSession, hasCheckedIn} from "../utils/attendanceUtils";
-import {checkIn} from "../utils/attendance";
-import {notifySessionCancelled} from "../utils/notifications";
+import {getAttendanceLabel} from "../utils/attendanceUtils";
 import SessionLabels from "../components/SessionLabels";
 import SessionStatusPill from "../components/SessionStatusPill";
 import {formatSessionWhen} from "../utils/sessionFormat";
-import {useConfirm} from "../components/ConfirmDialog";
 
 function MySessions() {
   const [createdSessions, setCreatedSessions] = useState([]);
   const [joinedSessions, setJoinedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState({});
-  const [participantProfiles, setParticipantProfiles] = useState({});
   const [creatorProfiles, setCreatorProfiles] = useState({});
+  const [now, setNow] = useState(() => new Date());
   const {currentUser} = useAuth();
   const navigate = useNavigate();
-  const {confirm, dialog} = useConfirm();
 
-  const setSessionActionLoading = (sessionId, isLoading) => {
-    setActionLoading((prev) => ({
-      ...prev,
-      [sessionId]: isLoading,
-    }));
-  };
-
-  // Fetch participants for all sessions the current user created and creators for all sessions joined
+  // Fetch sessions the current user created or joined, plus joined-session creators.
   const fetchMySessions = useCallback(async () => {
     if (!currentUser) {
       setCreatedSessions([]);
       setJoinedSessions([]);
-      setParticipantProfiles({});
       setCreatorProfiles({});
       setLoading(false);
       return;
@@ -70,29 +57,11 @@ function MySessions() {
       }))
       .filter((session) => session.creatorId !== currentUser.uid);
 
-    const participantUids = [
-      ...new Set(
-        createdSessionList.flatMap((session) => session.participants || [])
-      ),
-    ];
-
     const creatorUids = [
       ...new Set(
         joinedSessionList.map((session) => session.creatorId).filter(Boolean)
       ),
     ];
-
-    const participantProfileEntries = await Promise.all(
-      participantUids.map(async (uid) => {
-        const userSnap = await getDoc(doc(db, "users", uid));
-
-        if (!userSnap.exists()) {
-          return [uid, {uid, name: "Unknown participant"}];
-        }
-
-        return [uid, {uid, ...userSnap.data()}];
-      })
-    );
 
     const creatorProfileEntries = await Promise.all(
       creatorUids.map(async (uid) => {
@@ -106,96 +75,24 @@ function MySessions() {
       })
     );
 
-    setParticipantProfiles(Object.fromEntries(participantProfileEntries));
     setCreatorProfiles(Object.fromEntries(creatorProfileEntries));
     setCreatedSessions(sortSessions(createdSessionList));
     setJoinedSessions(sortSessions(joinedSessionList));
     setLoading(false);
   }, [currentUser]);
 
-  async function handleCancelSession(session) {
-    const confirmed = await confirm({
-      title: "Cancel this session?",
-      message: "Everyone who joined will be notified.",
-      confirmLabel: "Cancel session",
-      destructive: true,
-    });
-    if (!confirmed) return;
-
-    try {
-      setSessionActionLoading(session.id, true);
-      const sessionRef = doc(db, "sessions", session.id);
-
-      await updateDoc(sessionRef, {
-        status: "Cancelled",
-      });
-
-      await notifySessionCancelled(session);
-
-      await fetchMySessions();
-    } catch (error) {
-      console.error("Failed to cancel session:", error);
-    } finally {
-      setSessionActionLoading(session.id, false);
-    }
-  }
-
-  async function handleLeaveSession(sessionId) {
-    if (!currentUser) return;
-
-    const confirmed = await confirm({
-      title: "Leave this session?",
-      message: "You'll be removed from the participant list.",
-      confirmLabel: "Leave",
-      destructive: true,
-    });
-    if (!confirmed) return;
-
-    try {
-      setSessionActionLoading(sessionId, true);
-      const sessionRef = doc(db, "sessions", sessionId);
-
-      await updateDoc(sessionRef, {
-        participants: arrayRemove(currentUser.uid),
-      });
-
-      await fetchMySessions();
-    } catch (error) {
-      console.error("Failed to leave session:", error);
-    } finally {
-      setSessionActionLoading(sessionId, false);
-    }
-  }
-
-  async function handleAttendance(session) {
-    if (!currentUser) return;
-
-    const action = getAvailableAction(session, currentUser.uid);
-    if (action !== "check-in") return;
-
-    try {
-      setSessionActionLoading(session.id, true);
-      await checkIn(session.id, currentUser.uid);
-      await fetchMySessions();
-    } catch (error) {
-      console.error("Failed to check in:", error);
-    } finally {
-      setSessionActionLoading(session.id, false);
-    }
-  }
-
   function renderSessionCard(session, type) {
     const participantCount = session.participants?.length || 0;
     const creatorProfile = creatorProfiles[session.creatorId];
     const creatorName = creatorProfile?.name || "Unknown creator";
-    const isActionLoading = !!actionLoading[session.id];
-    const attendanceAction = type === "joined"
-      ? getAvailableAction(session, currentUser?.uid)
-      : null;
+    const inactive = isInactive(session);
+    const attendanceLabel = session.status === "Cancelled"
+      ? null
+      : getAttendanceLabel(session, currentUser?.uid, now);
 
     return (
       <div
-        className={`card session-card${isInactive(session) ? " session-inactive" : ""}`}
+        className={`card session-card${inactive ? " session-inactive" : ""}`}
         key={session.id}
         role="button"
         tabIndex={0}
@@ -214,73 +111,23 @@ function MySessions() {
         <p className="session-meta">
           {type === "joined" && `${creatorName} · `}
           {participantCount} of {session.maxParticipants} joined
+          {attendanceLabel && ` · ${attendanceLabel}`}
         </p>
         <SessionLabels session={session} />
-
-        <div className="session-actions">
-          {type === "created" && !isInactive(session) && (
-            <button
-              className="session-action-button edit-button"
-              disabled={isActionLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/sessions/${session.id}/edit`);
-              }}
-            >
-              Edit
-            </button>
-          )}
-
-          {type === "created" && !isInactive(session) && (
-            <button
-              className="session-action-button cancel-button"
-              disabled={isActionLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCancelSession(session);
-              }}
-            >
-              {isActionLoading ? "Cancelling..." : "Cancel"}
-            </button>
-          )}
-
-          {type === "joined" && attendanceAction === "check-in" && (
-            <button
-              className="session-action-button checkin-button"
-              disabled={isActionLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAttendance(session);
-              }}
-            >
-              {isActionLoading ? "Saving..." : "Check in"}
-            </button>
-          )}
-
-          {type === "joined" && hasCheckedIn(session, currentUser?.uid) && (
-            <span className="attendance-badge">Attended</span>
-          )}
-
-          {type === "joined" && canLeaveSession(session, currentUser?.uid) && !isActionLoading && (
-            <button
-              className="session-action-button cancel-button"
-              disabled={isActionLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLeaveSession(session.id);
-              }}
-            >
-              {isActionLoading ? "Leaving..." : "Leave"}
-            </button>
-          )}
-        </div>
       </div>
     );
   }
 
   useEffect(() => {
+    // Initial Firestore synchronization for this page.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchMySessions();
   }, [fetchMySessions]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <main className="page">
@@ -329,8 +176,6 @@ function MySessions() {
           </section>
         </>
       )}
-
-      {dialog}
     </main>
   );
 }

@@ -2,11 +2,10 @@
 // testable with plain objects (same pattern as sessionUtils, reviewUtils,
 // recommendationUtils).
 
-import {getSessionStartMillis} from "./sessionUtils";
+import {getSessionStartMillis, isBeforeSessionStart} from "./sessionUtils";
 
-// Slack around the session's own start and end. People do not arrive on the
-// exact minute, so the check-in window opens 15 minutes before the start and
-// stays open 15 minutes after the end.
+// Check-in opens 15 minutes before the session starts and closes 15 minutes
+// after it starts. The end time is unrelated to check-in eligibility.
 export const CHECK_IN_BUFFER_MS = 15 * 60 * 1000;
 
 // Attendance is a two-state model: a user has either checked in ("in") or has no
@@ -44,19 +43,22 @@ export function getSessionEndMillis(session) {
 // around the right time" rule lives in exactly one place.
 export function isWithinCheckInWindow(session, now = new Date()) {
   const start = getSessionStartMillis(session);
-  const end = getSessionEndMillis(session);
-
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return false;
+  if (!Number.isFinite(start)) return false;
 
   const nowMillis = now.getTime();
-  return nowMillis >= start - CHECK_IN_BUFFER_MS && nowMillis <= end + CHECK_IN_BUFFER_MS;
+  return nowMillis >= start - CHECK_IN_BUFFER_MS
+    && nowMillis <= start + CHECK_IN_BUFFER_MS;
 }
 
-// True once the check-in window has fully closed (session end + buffer). Used to
-// decide when the Leave button should disappear for someone who never showed.
+// True once the start-centred check-in window has fully closed.
 export function isCheckInWindowOver(session, now = new Date()) {
+  const start = getSessionStartMillis(session);
+  return Number.isFinite(start) && now.getTime() > start + CHECK_IN_BUFFER_MS;
+}
+
+export function isSessionOver(session, now = new Date()) {
   const end = getSessionEndMillis(session);
-  return Number.isFinite(end) && now.getTime() > end + CHECK_IN_BUFFER_MS;
+  return Number.isFinite(end) && now.getTime() >= end;
 }
 
 // What the user can do right now. Returns "check-in" only when they have not
@@ -66,50 +68,51 @@ export function isCheckInWindowOver(session, now = new Date()) {
 //   - window not open yet / already closed -> null
 //   - cancelled session    -> null
 export function getAvailableAction(session, uid, now = new Date()) {
-  if (!session || session.status === "Cancelled") return null;
-  if (hasCheckedIn(session, uid)) return null;
+  if (!session || session.status !== "Active") return null;
+  if (!(session.participants || []).includes(uid)) return null;
+  if (getAttendanceState(session, uid) !== null) return null;
   if (!isWithinCheckInWindow(session, now)) return null;
 
   return "check-in";
 }
 
-// Whether the Leave button should show for a joined session. A user may leave
-// only while they have NOT checked in and the check-in window has not yet closed.
-// Checking in locks them in (Leave disappears); once the window is over, leaving
-// is moot because the session is done.
+// Registration may be withdrawn only before the session starts. Any attendance
+// record locks the participant into the historical session record.
 export function canLeaveSession(session, uid, now = new Date()) {
-  if (!session || session.status === "Cancelled") return false;
-  if (hasCheckedIn(session, uid)) return false;
-  if (isCheckInWindowOver(session, now)) return false;
+  if (!session || session.status !== "Active") return false;
+  if (session.creatorId === uid) return false;
+  if (!(session.participants || []).includes(uid)) return false;
+  if (getAttendanceState(session, uid) !== null) return false;
 
-  return true;
+  return isBeforeSessionStart(session, now);
 }
 
-// A short human label for a user's attendance on one session, used in the
-// records list. "Missed" is only asserted once the session is over and no
-// check-in was recorded, so an upcoming session reads as "Upcoming" rather than
-// prematurely branding the user absent.
+// A short human label for a user's attendance on one session. An unchecked
+// session is Upcoming before it starts, Ongoing while in progress, and becomes
+// Missed when it ends.
 export function getAttendanceLabel(session, uid, now = new Date()) {
+  if (session?.status === "Cancelled") return "Cancelled";
   if (hasCheckedIn(session, uid)) return "Attended";
-  if (isCheckInWindowOver(session, now)) return "Missed";
-  return "Upcoming";
+  if (isSessionOver(session, now)) return "Missed";
+
+  const start = getSessionStartMillis(session);
+  if (Number.isFinite(start) && now.getTime() < start) return "Upcoming";
+
+  return "Ongoing";
 }
 
 // Attendance counts as "showed up" if the user checked in. With no check-out
 // state, this is simply whether the record is "in".
 export function didAttend(session, uid) {
-  return hasCheckedIn(session, uid);
+  return session?.status !== "Cancelled" && hasCheckedIn(session, uid);
 }
 
-// A session counts toward the rate only once it is genuinely over and only if it
-// is one the user was actually expected to attend. Sessions the user created are
-// excluded: the creator is auto-added to participants but has no check-in button,
-// so counting their own sessions would unfairly mark them absent. Cancelled
-// sessions are excluded because they never happened.
+// A checked-in session counts immediately as attended. An unchecked session
+// enters the denominator when it ends and becomes Missed. Cancelled sessions
+// never enter attendance statistics.
 export function countsTowardRate(session, uid, now = new Date()) {
   if (session.status === "Cancelled") return false;
-  if (session.creatorId === uid) return false;
-  return isCheckInWindowOver(session, now) || didAttend(session, uid);
+  return isSessionOver(session, now) || didAttend(session, uid);
 }
 
 // Summarises a user's attendance across the sessions they joined. `attended` is
@@ -118,7 +121,8 @@ export function countsTowardRate(session, uid, now = new Date()) {
 // than a misleading 0%.
 export function summarizeAttendance(sessions, uid, now = new Date()) {
   const joined = (sessions || []).filter((session) =>
-    (session.participants || []).includes(uid)
+    session.status !== "Cancelled"
+      && (session.participants || []).includes(uid)
   );
 
   let attended = 0;

@@ -722,6 +722,11 @@ h2 {
   cursor: pointer;
 }
 
+.session-action-button:disabled:not(.full-button) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .back-button {
   background: white;
   color: var(--color-accent);
@@ -735,14 +740,16 @@ h2 {
   box-shadow: 0 4px 14px var(--shadow-color-soft);
 }
 
-.edit-button {
+.edit-button,
+.join-button {
   background: var(--color-accent);
   color: white;
   border: 1px solid transparent;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.edit-button:hover {
+.edit-button:hover:not(:disabled),
+.join-button:hover:not(:disabled) {
   background: var(--color-accent-hover);
   border: 1px solid var(--color-accent-hover);
   box-shadow: 0 4px 14px var(--shadow-color-soft);
@@ -769,7 +776,7 @@ h2 {
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background: var(--color-danger);
   color: white;
   border: 1px solid var(--color-danger);
@@ -1394,9 +1401,6 @@ h2 {
 
 .recommendation-reasons li {
   font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--color-accent-bg);
   color: var(--color-brand);
 }
 
@@ -1569,6 +1573,12 @@ h2 {
 .attendance-tag-upcoming {
   background: var(--color-surface-muted);
   color: var(--color-text-muted);
+}
+
+.attendance-tag-cancelled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
 }
 
 /* ============================================================
@@ -1834,7 +1844,6 @@ h2 {
   font-size: 15px;
   color: rgba(255, 255, 255, 0.85);
   line-height: 1.5;
-  max-width: 52ch;
 }
 
 .home-hero-actions {
@@ -1852,6 +1861,7 @@ h2 {
   cursor: pointer;
   text-decoration: none;
   border: 1px solid transparent;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .home-hero-button.primary {
@@ -1865,25 +1875,17 @@ h2 {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.home-hero-button:hover {
-  transform: translateY(-1px);
+.home-hero-button.primary:hover {
+  background: var(--color-accent-bg);
+  color: var(--color-accent-hover);
+  border-color: var(--border-on-brand-strong);
+}
+
+.home-hero-button.secondary:hover {
+  background: var(--overlay-white-soft);
 }
 
 .home-hero-button:focus-visible {
   outline: 3px solid var(--focus-ring-on-brand);
   outline-offset: 3px;
-}
-/* Append to src/App.css.
-   Small "Attended" badge shown on a joined card once the user has checked in,
-   in place of the (now removed) check-in / leave buttons. */
-
-.attendance-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: var(--radius);
-  color: var(--color-success-text-strong);
-  background: var(--color-success-bg-strong);
 }

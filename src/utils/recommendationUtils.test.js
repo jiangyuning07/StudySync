@@ -33,9 +33,9 @@ function makeSession(overrides = {}) {
 describe("buildUserProfile", () => {
   it("collects modules, spaces and the favourite mode from attended sessions", () => {
     const sessions = [
-      makeSession({moduleCode: "CS2103T", studySpaceId: "space-a", studyMode: "Discussion", participants: ["me"]}),
-      makeSession({moduleCode: "CS2103T", studySpaceId: "space-a", studyMode: "Discussion", participants: ["me"]}),
-      makeSession({moduleCode: "MA1521", studySpaceId: "space-b", studyMode: "Silent", participants: ["me"]}),
+      makeSession({moduleCode: "CS2103T", studySpaceId: "space-a", studyMode: "Discussion", participants: ["me"], attendance: {me: "in"}}),
+      makeSession({moduleCode: "CS2103T", studySpaceId: "space-a", studyMode: "Discussion", participants: ["me"], attendance: {me: "in"}}),
+      makeSession({moduleCode: "MA1521", studySpaceId: "space-b", studyMode: "Silent", participants: ["me"], attendance: {me: "in"}}),
     ];
 
     const profile = buildUserProfile(sessions, "me");
@@ -52,6 +52,14 @@ describe("buildUserProfile", () => {
     const profile = buildUserProfile(sessions, "me");
     expect(profile.attendedCount).toBe(0);
     expect(profile.moduleCodes.size).toBe(0);
+  });
+
+  it("ignores joined-but-missed and cancelled sessions", () => {
+    const sessions = [
+      makeSession({participants: ["me"]}),
+      makeSession({participants: ["me"], attendance: {me: "in"}, status: "Cancelled"}),
+    ];
+    expect(buildUserProfile(sessions, "me").attendedCount).toBe(0);
   });
 
   it("returns an empty profile for a user with no sessions", () => {

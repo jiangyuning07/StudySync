@@ -91,6 +91,45 @@ service cloud.firestore {
 
     match /sessions/{sessionId} {
 
+      // Session date/time strings represent NUS local time (UTC+8). Convert the
+      // existing "YYYY-MM-DD" and "HH:mm" fields to a timestamp so rules use
+      // the trusted server request time rather than the device clock.
+      function hasValidSessionStart() {
+        return resource.data.date is string
+          && resource.data.startTime is string
+          && resource.data.date.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+          && resource.data.startTime.matches("[0-9]{2}:[0-9]{2}");
+      }
+
+      function sessionStartAt() {
+        let dateParts = resource.data.date.split("-");
+        let timeParts = resource.data.startTime.split(":");
+
+        return timestamp.date(
+                 int(dateParts[0]),
+                 int(dateParts[1]),
+                 int(dateParts[2])
+               )
+               + duration.time(
+                   int(timeParts[0]),
+                   int(timeParts[1]),
+                   0,
+                   0
+                 )
+               - duration.value(8, "h");
+      }
+
+      function isBeforeSessionStart() {
+        return hasValidSessionStart()
+          && request.time < sessionStartAt();
+      }
+
+      function isWithinCheckInWindow() {
+        return hasValidSessionStart()
+          && request.time >= sessionStartAt() - duration.value(15, "m")
+          && request.time <= sessionStartAt() + duration.value(15, "m");
+      }
+
       // A non-creator update must change only the participants field.
       function onlyParticipantsChanged() {
         return resource.data.participants is list
@@ -123,35 +162,43 @@ service cloud.firestore {
       function isValidLeave() {
         let before = resource.data.participants.toSet();
         let after = request.resource.data.participants.toSet();
+        let attendance = resource.data.get("attendance", {});
 
         return isSignedIn()
           && onlyParticipantsChanged()
           && resource.data.creatorId != request.auth.uid
           && resource.data.status == "Active"
+          && isBeforeSessionStart()
           && request.auth.uid in before
+          && !(request.auth.uid in attendance)
           && !(request.auth.uid in after)
           && before.difference(after) == [request.auth.uid].toSet()
           && after.difference(before).size() == 0
           && request.resource.data.participants.size() == after.size();
       }
 
-      // A participant may set only their OWN attendance key, only on a session they
-      // have joined, only while the session is Active, and without touching any other
-      // field. This mirrors the participants pattern: the affectedKeys check pins the
-      // write down to exactly attendance.{uid} and nothing else. 
-
+      // Check-in is a one-way write: an active participant may add only their
+      // previously absent attendance key, with the final value "in".
       function isValidCheckIn() {
-        let changed =
+        let changedTopLevel =
           request.resource.data.diff(resource.data).affectedKeys();
+        let beforeAttendance = resource.data.get("attendance", {});
+        let afterAttendance = request.resource.data.get("attendance", {});
+        let changedAttendance =
+          afterAttendance.diff(beforeAttendance).affectedKeys();
 
         return isSignedIn()
           && resource.data.status == "Active"
           && request.auth.uid in resource.data.participants
-          && changed.hasOnly(["attendance"])
-          && request.resource.data.attendance.diff(
-               resource.data.get("attendance", {})
-             ).affectedKeys().hasOnly([request.auth.uid])
-          && request.resource.data.attendance[request.auth.uid] in ["in", "out"];
+          && isWithinCheckInWindow()
+          && beforeAttendance is map
+          && afterAttendance is map
+          && !(request.auth.uid in beforeAttendance)
+          && changedTopLevel.hasAll(["attendance"])
+          && changedTopLevel.hasOnly(["attendance"])
+          && changedAttendance.hasAll([request.auth.uid])
+          && changedAttendance.hasOnly([request.auth.uid])
+          && afterAttendance[request.auth.uid] == "in";
       }
  
       // Creators may edit their own session. They cannot transfer ownership,
@@ -166,6 +213,9 @@ service cloud.firestore {
 
         return isSignedIn()
           && resource.data.creatorId == request.auth.uid
+          && resource.data.status == "Active"
+          && isBeforeSessionStart()
+          && changed.size() > 0
           && request.resource.data.creatorId == resource.data.creatorId
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.participants is list
@@ -177,13 +227,21 @@ service cloud.firestore {
           && request.resource.data.participants.size()
                <= request.resource.data.maxParticipants
           && request.resource.data.status in ["Active", "Cancelled"]
+          // Attendance must always go through isValidCheckIn, including for the
+          // creator, so this broad edit permission cannot rewrite attendance.
+          && !changed.hasAny(["attendance"])
           && (
                resource.data.status != "Cancelled"
                || request.resource.data.status == "Cancelled"
              )
           && (
                !changed.hasAny(["participants"])
-               || after.difference(before).size() == 0
+               || (
+                    after.difference(before).size() == 0
+                    && before.difference(after).intersection(
+                         resource.data.get("attendance", {}).keys().toSet()
+                       ).size() == 0
+                  )
              );
       }
 

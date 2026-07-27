@@ -31,7 +31,7 @@ function RecommendedSessionCard({session, reasons}) {
       {reasons && reasons.length > 0 && (
         <ul className="recommendation-reasons">
           {reasons.map((reason) => (
-            <li key={reason}>{reason}</li>
+            <li key={reason}>#{reason}</li>
           ))}
         </ul>
       )}

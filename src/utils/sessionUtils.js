@@ -40,6 +40,11 @@ export function getSessionStartMillis(session) {
   return Number.POSITIVE_INFINITY;
 }
 
+export function isBeforeSessionStart(session, now = new Date()) {
+  const start = getSessionStartMillis(session);
+  return Number.isFinite(start) && now.getTime() < start;
+}
+
 export function sortSessions(sessions) {
   const active = sessions.filter((s) => !isInactive(s));
   const inactive = sessions.filter((s) => isInactive(s));

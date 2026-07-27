@@ -11,6 +11,7 @@ import {
   isValidNusModuleCode,
   MODULE_CODE_MAX_LENGTH,
   normalizeModuleCode,
+  isBeforeSessionStart,
   STUDY_MODES,
   STUDY_GOAL_MAX_LENGTH,
 } from "../utils/sessionUtils";
@@ -86,18 +87,24 @@ function EditSession() {
           return;
         }
 
+        if (data.status !== "Active" || !isBeforeSessionStart(data)) {
+          navigate(`/sessions/${id}`);
+          return;
+        }
+
         setSessionCreatorId(data.creatorId);
 
         const participantIds = data.participants || [];
         const participantProfiles = await Promise.all(
           participantIds.map(async (uid) => {
             const userSnap = await getDoc(doc(db, "users", uid));
+            const attendanceState = data.attendance?.[uid] || null;
 
             if (!userSnap.exists()) {
-              return {uid, name: "Unknown participant"};
+              return {uid, name: "Unknown participant", attendanceState};
             }
 
-            return {uid, ...userSnap.data()};
+            return {uid, ...userSnap.data(), attendanceState};
           })
         );
         setParticipants(participantProfiles);
@@ -140,6 +147,11 @@ function EditSession() {
       return;
     }
 
+    if (participant.attendanceState) {
+      setMessage("Participants who checked in cannot be removed.");
+      return;
+    }
+
     const label = participant.name;
     const confirmed = await confirm({
       title: "Remove participant?",
@@ -164,6 +176,11 @@ function EditSession() {
   async function handleEditSession(e) {
     e.preventDefault();
     setMessage("");
+
+    if (!isBeforeSessionStart(originalDetails)) {
+      setMessage("This session can no longer be edited after it starts.");
+      return;
+    }
 
     const selectedStudySpace = studySpaces.find((space) => space.id === studySpaceId);
 
@@ -356,6 +373,7 @@ function EditSession() {
           <ul className="participant-list">
             {participants.map((participant) => {
               const isSessionCreator = participant.uid === sessionCreatorId;
+              const hasAttendance = Boolean(participant.attendanceState);
 
               return (
                 <li
@@ -368,6 +386,9 @@ function EditSession() {
                     {isSessionCreator && (
                       <span className="participant-owner-badge">Owner</span>
                     )}
+                    {hasAttendance && (
+                      <span className="participant-owner-badge">Attended</span>
+                    )}
                   </span>
                   {participant.email && <small>{participant.email}</small>}
                   
@@ -376,7 +397,7 @@ function EditSession() {
                     className="remove-participant-button"
                     onClick={() => handleRemoveParticipant(participant)}
                     aria-label={`Remove ${participant.name || "participant"}`}
-                    disabled={isSessionCreator}
+                    disabled={isSessionCreator || hasAttendance}
                   >
                     ×
                   </button>

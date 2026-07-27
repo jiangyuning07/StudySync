@@ -1873,3 +1873,17 @@ h2 {
   outline: 3px solid var(--focus-ring-on-brand);
   outline-offset: 3px;
 }
+/* Append to src/App.css.
+   Small "Attended" badge shown on a joined card once the user has checked in,
+   in place of the (now removed) check-in / leave buttons. */
+
+.attendance-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  color: var(--color-success-text-strong);
+  background: var(--color-success-bg-strong);
+}

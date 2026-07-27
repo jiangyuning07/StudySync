@@ -14,20 +14,15 @@ export async function fetchJoinedSessions(uid) {
   return snapshot.docs.map((docSnap) => ({id: docSnap.id, ...docSnap.data()}));
 }
 
-// Check-in and check-out both write a single key into the session's `attendance`
-// map: attendance.{uid}. Using dotted field paths means we touch only our own
-// key and never rewrite the whole map, which is what lets the security rule
-// allow a non-creator to update attendance without being able to alter anyone
-// else's record (mirroring how joining only appends to `participants`).
-
+// Check-in writes a single key into the session's `attendance` map:
+// attendance.{uid} = "in". A dotted field path touches only that one key and
+// never rewrites the whole map, which is what lets the security rule allow a
+// non-creator to record their own attendance without altering anyone else's
+// (mirroring how joining only appends to `participants`).
+//
+// There is no check-out: checking in is final for the session.
 export async function checkIn(sessionId, uid) {
   await updateDoc(doc(db, "sessions", sessionId), {
     [`attendance.${uid}`]: ATTENDANCE.IN,
-  });
-}
-
-export async function checkOut(sessionId, uid) {
-  await updateDoc(doc(db, "sessions", sessionId), {
-    [`attendance.${uid}`]: ATTENDANCE.OUT,
   });
 }

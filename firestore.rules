@@ -18,12 +18,25 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Users may read profiles because names are shown throughout the app.
-    // A user can create their own profile and later change only their name.
-    match /users/{userId} {
-      allow read: if isSignedIn();
+    function hasNusEmail() {
+      return isSignedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.matches(
+             "^[eE][0-9]{7}@[uU][.][nN][uU][sS][.][eE][dD][uU]$"
+           );
+    }
 
-      allow create: if isSignedIn()
+    function isVerifiedNusUser() {
+      return hasNusEmail()
+        && request.auth.token.email_verified == true;
+    }
+
+    // Users may read profiles because names are shown throughout the app.
+    // Registration creates the profile before email verification.
+    match /users/{userId} {
+      allow read: if isVerifiedNusUser();
+
+      allow create: if hasNusEmail()
         && request.auth.uid == userId
         && request.resource.data.keys().hasAll(
              ["name", "email", "createdAt"])
@@ -34,23 +47,21 @@ service cloud.firestore {
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.createdAt == request.time;
 
-      allow update: if isSignedIn()
+      allow update: if isVerifiedNusUser()
         && request.auth.uid == userId
         && request.resource.data.diff(resource.data)
              .affectedKeys().hasOnly(["name"])
         && request.resource.data.name is string;
 
-      allow delete: if isSignedIn()
+      allow delete: if isVerifiedNusUser()
         && request.auth.uid == userId;
     }
 
-    // Study spaces are curated data. Signed-in users can read them but clients
-    // cannot create, modify, or delete them.
+    // Study spaces are curated data.
     match /studySpaces/{spaceId} {
-      allow read: if isSignedIn();
+      allow read: if isVerifiedNusUser();
       allow write: if false;
 
-      // Reviews are stored using the review author's UID as the document ID.
       match /reviews/{reviewId} {
 
         function isValidReview() {
@@ -69,31 +80,29 @@ service cloud.firestore {
             && request.resource.data.comment.size() <= 300;
         }
 
-        allow read: if isSignedIn();
+        allow read: if isVerifiedNusUser();
 
-        allow create: if isSignedIn()
+        allow create: if isVerifiedNusUser()
           && request.auth.uid == reviewId
           && isValidReview()
           && request.resource.data.createdAt == request.time
           && request.resource.data.updatedAt == request.time;
 
-        allow update: if isSignedIn()
+        allow update: if isVerifiedNusUser()
           && request.auth.uid == reviewId
           && isValidReview()
           && request.resource.data.userId == resource.data.userId
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.updatedAt == request.time;
 
-        allow delete: if isSignedIn()
+        allow delete: if isVerifiedNusUser()
           && request.auth.uid == reviewId;
       }
     }
 
     match /sessions/{sessionId} {
 
-      // Session date/time strings represent NUS local time (UTC+8). Convert the
-      // existing "YYYY-MM-DD" and "HH:mm" fields to a timestamp so rules use
-      // the trusted server request time rather than the device clock.
+      // Session date/time strings represent NUS local time (UTC+8).
       function hasValidSessionStart() {
         return resource.data.date is string
           && resource.data.startTime is string
@@ -130,7 +139,124 @@ service cloud.firestore {
           && request.time <= sessionStartAt() + duration.value(15, "m");
       }
 
-      // A non-creator update must change only the participants field.
+      // Validate the new session start time during create/edit.
+      function hasValidRequestedSessionStart() {
+        return request.resource.data.date is string
+          && request.resource.data.startTime is string
+          && request.resource.data.date.matches(
+               "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+          && request.resource.data.startTime.matches(
+               "[0-9]{2}:[0-9]{2}");
+      }
+
+      function requestedSessionStartAt() {
+        let dateParts = request.resource.data.date.split("-");
+        let timeParts = request.resource.data.startTime.split(":");
+
+        return timestamp.date(
+                 int(dateParts[0]),
+                 int(dateParts[1]),
+                 int(dateParts[2])
+               )
+               + duration.time(
+                   int(timeParts[0]),
+                   int(timeParts[1]),
+                   0,
+                   0
+                 )
+               - duration.value(8, "h");
+      }
+
+      function requestedTimeInMinutes(time) {
+        let parts = time.split(":");
+        return int(parts[0]) * 60 + int(parts[1]);
+      }
+
+      // This matches the payload currently written by CreateSession.jsx.
+      function isValidSessionDocument() {
+        let data = request.resource.data;
+        let participants = data.participants.toSet();
+        let attendance = data.get("attendance", {});
+
+        return data.keys().hasAll([
+                 "studySpaceId",
+                 "studySpaceName",
+                 "date",
+                 "startTime",
+                 "endTime",
+                 "duration",
+                 "studyMode",
+                 "moduleCode",
+                 "studyGoal",
+                 "maxParticipants",
+                 "creatorId",
+                 "creatorName",
+                 "participants",
+                 "status",
+                 "createdAt"
+               ])
+          && data.keys().hasOnly([
+                 "studySpaceId",
+                 "studySpaceName",
+                 "date",
+                 "startTime",
+                 "endTime",
+                 "duration",
+                 "studyMode",
+                 "moduleCode",
+                 "studyGoal",
+                 "maxParticipants",
+                 "creatorId",
+                 "creatorName",
+                 "participants",
+                 "status",
+                 "createdAt",
+                 "attendance"
+               ])
+          && data.studySpaceId is string
+          && data.studySpaceName is string
+          && data.date is string
+          && data.startTime is string
+          && data.endTime is string
+          && data.date.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")
+          && data.startTime.matches("[0-9]{2}:[0-9]{2}")
+          && data.endTime.matches("[0-9]{2}:[0-9]{2}")
+          && data.duration is int
+          && requestedTimeInMinutes(data.endTime)
+               > requestedTimeInMinutes(data.startTime)
+          && data.duration
+               == requestedTimeInMinutes(data.endTime)
+                    - requestedTimeInMinutes(data.startTime)
+          && data.studyMode in ["Silent", "Discussion", "Both"]
+          && data.moduleCode is string
+          && data.moduleCode.size() <= 10
+          && data.studyGoal is string
+          && data.studyGoal.size() <= 120
+          && data.maxParticipants is int
+          && data.maxParticipants >= 2
+          && data.maxParticipants <= 20
+          && data.creatorId is string
+          && data.creatorName is string
+          && data.participants is list
+          && data.participants.size() == participants.size()
+          && data.participants.size() <= data.maxParticipants
+          && data.creatorId in participants
+          && data.status in ["Active", "Cancelled"]
+          && data.createdAt is timestamp
+          && attendance is map
+          && attendance.keys().toSet()
+               .difference(participants).size() == 0
+          && exists(
+               /databases/$(database)/documents/users/$(data.creatorId)
+             )
+          && exists(
+               /databases/$(database)/documents/studySpaces/$(data.studySpaceId)
+             )
+          && get(
+               /databases/$(database)/documents/studySpaces/$(data.studySpaceId)
+             ).data.name == data.studySpaceName;
+      }
+
       function onlyParticipantsChanged() {
         return resource.data.participants is list
           && request.resource.data.participants is list
@@ -138,13 +264,11 @@ service cloud.firestore {
                .affectedKeys().hasOnly(["participants"]);
       }
 
-      // A participant may join only an active, non-full session and may add
-      // only their own UID without removing or changing anyone else.
       function isValidJoin() {
         let before = resource.data.participants.toSet();
         let after = request.resource.data.participants.toSet();
 
-        return isSignedIn()
+        return isVerifiedNusUser()
           && onlyParticipantsChanged()
           && resource.data.creatorId != request.auth.uid
           && resource.data.status == "Active"
@@ -157,14 +281,12 @@ service cloud.firestore {
                <= resource.data.maxParticipants;
       }
 
-      // A participant may leave by removing only their own UID. They cannot
-      // add, remove, or reorder another participant through this permission.
       function isValidLeave() {
         let before = resource.data.participants.toSet();
         let after = request.resource.data.participants.toSet();
         let attendance = resource.data.get("attendance", {});
 
-        return isSignedIn()
+        return isVerifiedNusUser()
           && onlyParticipantsChanged()
           && resource.data.creatorId != request.auth.uid
           && resource.data.status == "Active"
@@ -177,8 +299,6 @@ service cloud.firestore {
           && request.resource.data.participants.size() == after.size();
       }
 
-      // Check-in is a one-way write: an active participant may add only their
-      // previously absent attendance key, with the final value "in".
       function isValidCheckIn() {
         let changedTopLevel =
           request.resource.data.diff(resource.data).affectedKeys();
@@ -187,7 +307,7 @@ service cloud.firestore {
         let changedAttendance =
           afterAttendance.diff(beforeAttendance).affectedKeys();
 
-        return isSignedIn()
+        return isVerifiedNusUser()
           && resource.data.status == "Active"
           && request.auth.uid in resource.data.participants
           && isWithinCheckInWindow()
@@ -200,23 +320,36 @@ service cloud.firestore {
           && changedAttendance.hasOnly([request.auth.uid])
           && afterAttendance[request.auth.uid] == "in";
       }
- 
-      // Creators may edit their own session. They cannot transfer ownership,
-      // replace the creation time, add participants manually, remove
-      // themselves, exceed the participant limit, or reactivate a cancelled
-      // session.
+
       function isValidCreatorUpdate() {
         let before = resource.data.participants.toSet();
         let after = request.resource.data.participants.toSet();
         let changed =
           request.resource.data.diff(resource.data).affectedKeys();
 
-        return isSignedIn()
+        return isVerifiedNusUser()
           && resource.data.creatorId == request.auth.uid
           && resource.data.status == "Active"
           && isBeforeSessionStart()
+          && hasValidRequestedSessionStart()
+          && request.time < requestedSessionStartAt()
           && changed.size() > 0
+          && changed.hasOnly([
+               "studySpaceId",
+               "studySpaceName",
+               "date",
+               "startTime",
+               "endTime",
+               "duration",
+               "studyMode",
+               "moduleCode",
+               "studyGoal",
+               "maxParticipants",
+               "participants",
+               "status"
+             ])
           && request.resource.data.creatorId == resource.data.creatorId
+          && request.resource.data.creatorName == resource.data.creatorName
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.participants is list
           && request.resource.data.participants.size() == after.size()
@@ -227,13 +360,8 @@ service cloud.firestore {
           && request.resource.data.participants.size()
                <= request.resource.data.maxParticipants
           && request.resource.data.status in ["Active", "Cancelled"]
-          // Attendance must always go through isValidCheckIn, including for the
-          // creator, so this broad edit permission cannot rewrite attendance.
           && !changed.hasAny(["attendance"])
-          && (
-               resource.data.status != "Cancelled"
-               || request.resource.data.status == "Cancelled"
-             )
+          && isValidSessionDocument()
           && (
                !changed.hasAny(["participants"])
                || (
@@ -245,41 +373,86 @@ service cloud.firestore {
              );
       }
 
-      allow read: if isSignedIn();
+      allow read: if isVerifiedNusUser();
 
-      allow create: if isSignedIn()
+      allow create: if isVerifiedNusUser()
         && request.resource.data.creatorId == request.auth.uid
-        && request.resource.data.participants is list
         && request.resource.data.participants == [request.auth.uid]
         && request.resource.data.maxParticipants is int
         && request.resource.data.maxParticipants >= 2
         && request.resource.data.maxParticipants <= 20
         && request.resource.data.status == "Active"
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.createdAt == request.time
+        && !request.resource.data.keys().hasAny(["attendance"])
+        && hasValidRequestedSessionStart()
+        && request.time < requestedSessionStartAt()
+        && isValidSessionDocument();
 
       allow update: if isValidCreatorUpdate()
                     || isValidJoin()
                     || isValidLeave()
                     || isValidCheckIn();
 
-      allow delete: if isSignedIn()
-        && resource.data.creatorId == request.auth.uid;
+      // Preserve delete capability only for an upcoming session with no
+      // attendance history.
+      allow delete: if isVerifiedNusUser()
+        && resource.data.creatorId == request.auth.uid
+        && isBeforeSessionStart()
+        && resource.data.get("attendance", {}).keys().size() == 0;
     }
 
     match /notifications/{notificationId} {
 
-      // Recipients may read only their own notifications.
-      allow read: if isSignedIn()
+      function notificationSessionExists() {
+        return exists(
+          /databases/$(database)/documents/sessions/$(request.resource.data.sessionId)
+        );
+      }
+
+      function notificationUserExists() {
+        return exists(
+          /databases/$(database)/documents/users/$(request.resource.data.userId)
+        );
+      }
+
+      function isValidNotificationRecipient() {
+        let session = get(
+          /databases/$(database)/documents/sessions/$(request.resource.data.sessionId)
+        ).data;
+        let userId = request.resource.data.userId;
+        let type = request.resource.data.type;
+
+        return userId != session.creatorId
+          && (
+               (
+                 type == "session_updated"
+                 && session.status == "Active"
+                 && userId in session.participants
+               )
+               || (
+                 type == "session_cancelled"
+                 && session.status == "Cancelled"
+                 && userId in session.participants
+               )
+               || (
+                 type == "participant_removed"
+                 && session.status == "Active"
+                 && !(userId in session.participants)
+               )
+             );
+      }
+
+      allow read: if isVerifiedNusUser()
         && resource.data.userId == request.auth.uid;
 
-      // Only the creator of the referenced session may create notifications.
-      allow create: if isSignedIn()
+      allow create: if isVerifiedNusUser()
         && request.resource.data.keys().hasOnly(
              ["userId", "message", "sessionId", "type", "read", "createdAt"])
         && request.resource.data.keys().hasAll(
              ["userId", "message", "sessionId", "type", "read", "createdAt"])
         && request.resource.data.userId is string
         && request.resource.data.message is string
+        && request.resource.data.message.size() <= 300
         && request.resource.data.sessionId is string
         && request.resource.data.type in [
              "session_updated",
@@ -288,19 +461,21 @@ service cloud.firestore {
            ]
         && request.resource.data.read == false
         && request.resource.data.createdAt == request.time
+        && notificationSessionExists()
+        && notificationUserExists()
         && get(
              /databases/$(database)/documents/sessions/$(request.resource.data.sessionId)
-           ).data.creatorId == request.auth.uid;
+           ).data.creatorId == request.auth.uid
+        && isValidNotificationRecipient();
 
-      // The recipient may only change an unread notification to read.
-      allow update: if isSignedIn()
+      allow update: if isVerifiedNusUser()
         && resource.data.userId == request.auth.uid
         && resource.data.read == false
         && request.resource.data.read == true
         && request.resource.data.diff(resource.data)
              .affectedKeys().hasOnly(["read"]);
 
-      allow delete: if isSignedIn()
+      allow delete: if isVerifiedNusUser()
         && resource.data.userId == request.auth.uid;
     }
   }

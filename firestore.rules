@@ -8,8 +8,8 @@ rules_version = "2";
 // Keep the complete ruleset in this file identical to the rules published in
 // the studysync-orbital26 Firebase project.
 //
-// The CLI command `firebase deploy --only firestore:rules` is not currently
-// configured because firebase.json has no "firestore" rules entry.
+// firebase.json references this file so local emulators and CI use the same
+// rules. Production publishing remains an explicit manual action.
 
 service cloud.firestore {
   match /databases/{database}/documents {

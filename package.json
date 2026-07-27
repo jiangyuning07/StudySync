@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "emulator": "firebase emulators:start" 
+    "emulator": "firebase emulators:start"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",

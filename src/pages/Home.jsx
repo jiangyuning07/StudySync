@@ -111,8 +111,8 @@ function Home() {
       <section className="discovery">
         <h2>Discovery</h2>
 
-        {loading && <p className="discovery-status">Loading recommendations...</p>}
-        {error && <p className="discovery-status discovery-error">{error}</p>}
+        {loading && <p>Loading recommendations...</p>}
+        {error && <p className="discovery-error">{error}</p>}
 
         {!loading && !error && (
           <>

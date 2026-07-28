@@ -448,6 +448,11 @@ h2 {
   display: flex;
   align-items: baseline;
   gap: 12px;
+  margin-bottom: 12px;
+}
+
+.all-sessions-heading h1 {
+  margin: 0;
 }
 
 .all-sessions-filter-toggle {
@@ -1339,10 +1344,6 @@ h2 {
   margin-bottom: 12px;
   font-size: 16px;
   color: var(--color-text-strong);
-}
-
-.discovery-status {
-  color: var(--color-text-muted);
 }
 
 .discovery-error {

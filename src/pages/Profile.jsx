@@ -1,5 +1,7 @@
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {doc, getDoc, updateDoc} from "firebase/firestore";
+import {db} from "../utils/firebase";
 import {useAuth} from "../AuthContext";
 import {fetchJoinedSessions} from "../utils/attendance";
 import {
@@ -19,6 +21,12 @@ const LABEL_CLASS = {
   Ongoing: "attendance-tag-upcoming",
   Cancelled: "attendance-tag-cancelled",
 };
+const YEAR_OPTIONS = ["Year 1", "Year 2", "Year 3", "Year 4", "Masters", "PhD"];
+
+function getInitial(user) {
+  const source = user?.displayName || user?.email || "U";
+  return source.trim().charAt(0).toUpperCase() || "U";
+}
 
 function Profile() {
   const {currentUser} = useAuth();
@@ -28,6 +36,12 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [now, setNow] = useState(() => new Date());
+  const [profile, setProfile] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [yearInput, setYearInput] = useState("");
+  const [majorInput, setMajorInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +64,29 @@ function Profile() {
     };
   }, [currentUser.uid]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        if (cancelled || !snap.exists()) return;
+
+        const data = snap.data();
+        setProfile(data);
+        setYearInput(data.yearOfStudy || "");
+        setMajorInput(data.major || "");
+      } catch (loadError) {
+        console.error("Failed to load profile:", loadError);
+      }
+    }
+
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser.uid]);
+
   const summary = summarizeAttendance(sessions, currentUser.uid, now);
 
   useEffect(() => {
@@ -62,9 +99,124 @@ function Profile() {
     (a, b) => getSessionStartMillis(b) - getSessionStartMillis(a)
   );
 
+  async function handleSaveProfile(event) {
+    event.preventDefault();
+    setSaving(true);
+    setProfileMessage("");
+
+    const trimmedMajor = majorInput.trim();
+
+    if (trimmedMajor.length > 60) {
+      setProfileMessage("Major must be 60 characters or fewer.");
+      setSaving(false);
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "users", currentUser.uid), {
+        yearOfStudy: yearInput,
+        major: trimmedMajor,
+      });
+
+      setProfile((previous) => ({
+        ...previous,
+        yearOfStudy: yearInput,
+        major: trimmedMajor,
+      }));
+      setEditing(false);
+    } catch (saveError) {
+      console.error("Failed to save profile:", saveError);
+      setProfileMessage("Could not save your details. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCancelEdit() {
+    setYearInput(profile?.yearOfStudy || "");
+    setMajorInput(profile?.major || "");
+    setProfileMessage("");
+    setEditing(false);
+  }
+
   return (
     <main className="page">
       <h1>My Profile</h1>
+
+      <section className="card profile-identity-card">
+        <div className="profile-identity-header">
+          <span className="profile-avatar">{getInitial(currentUser)}</span>
+          <div className="profile-identity-text">
+            <h2>{currentUser?.displayName || "NUS student"}</h2>
+            <p className="profile-email">{currentUser?.email}</p>
+          </div>
+          {!editing && (
+            <button
+              type="button"
+              className="session-action-button secondary-button"
+              onClick={() => setEditing(true)}
+            >
+              Edit
+            </button>
+          )}
+        </div>
+
+        {editing ? (
+          <form className="profile-edit-form" onSubmit={handleSaveProfile}>
+            <label htmlFor="yearOfStudy">Year of study</label>
+            <select
+              id="yearOfStudy"
+              value={yearInput}
+              onChange={(event) => setYearInput(event.target.value)}
+            >
+              <option value="">Not set</option>
+              {YEAR_OPTIONS.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+
+            <label htmlFor="major">Major</label>
+            <input
+              id="major"
+              value={majorInput}
+              maxLength={60}
+              placeholder="Computer Science"
+              onChange={(event) => setMajorInput(event.target.value)}
+            />
+
+            {profileMessage && <p className="message">{profileMessage}</p>}
+
+            <div className="profile-edit-actions">
+              <button
+                type="submit"
+                className="session-action-button"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save"}
+              </button>
+              <button
+                type="button"
+                className="session-action-button secondary-button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <dl className="profile-detail-list">
+            <div>
+              <dt>Year of study</dt>
+              <dd>{profile?.yearOfStudy || "Not set"}</dd>
+            </div>
+            <div>
+              <dt>Major</dt>
+              <dd>{profile?.major || "Not set"}</dd>
+            </div>
+          </dl>
+        )}
+      </section>
 
       <section className="card attendance-summary-card">
         <h2>Attendance</h2>

@@ -2,8 +2,6 @@ import {Link, useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
 import {useEffect, useRef, useState} from "react";
 import NotificationBell from "./NotificationBell";
-import {fetchJoinedSessions} from "../utils/attendance";
-import {summarizeAttendance, formatAttendanceRate} from "../utils/attendanceUtils";
 
 function getUserInitial(currentUser) {
   const source = currentUser?.displayName || currentUser?.email || "User";
@@ -12,11 +10,8 @@ function getUserInitial(currentUser) {
 
 function UserMenu({currentUser, onLogout}) {
   const [isOpen, setIsOpen] = useState(false);
-  const [summary, setSummary] = useState(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
-
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -39,27 +34,7 @@ function UserMenu({currentUser, onLogout}) {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    // Fetch whenever the menu opens so a recent check-in is reflected without
-    // requiring a full page reload.
-    if (!isOpen || !currentUser?.uid) return;
-
-    // Opening the menu initiates this external Firestore synchronization.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSummaryLoading(true);
-
-    fetchJoinedSessions(currentUser.uid)
-      .then((sessions) => {
-        const s = summarizeAttendance(sessions, currentUser.uid);
-        setSummary(s);
-      })
-      .catch((error) => {
-        console.error("Failed to load attendance summary:", error);
-      })
-      .finally(() => {
-        setSummaryLoading(false);
-      });
-  }, [isOpen, currentUser]);
+  
 
   async function handleLogoutClick() {
     setIsOpen(false);
@@ -95,21 +70,9 @@ function UserMenu({currentUser, onLogout}) {
             {currentUser?.email && <small>{currentUser.email}</small>}
           </div>
 
-          <div className="user-dropdown-attendance">
-            {summaryLoading && !summary ? (
-              <small>Loading your attendance...</small>
-            ) : summary ? (
-              <small>
-                Joined {summary.joined} {summary.joined === 1 ? "session" : "sessions"} ·{" "}
-                {formatAttendanceRate(summary.rate)} attendance
-              </small>
-            ) : (
-              <small>Attendance record</small>
-            )}
-            <button type="button" className="user-dropdown-link" onClick={goToProfile}>
-              Show past sessions
-            </button>
-          </div>
+          <button type="button" className="user-dropdown-item" onClick={goToProfile}>
+            View profile
+          </button>
 
           <button type="button" className="user-dropdown-item" onClick={handleLogoutClick}>
             Logout

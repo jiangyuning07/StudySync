@@ -34,6 +34,21 @@ service cloud.firestore {
     // Users may read profiles because names are shown throughout the app.
     // Registration creates the profile before email verification.
     match /users/{userId} {
+
+      // yearOfStudy and major are optional profile fields. They are absent on
+      // accounts created before this feature, so both are validated through
+      // get() with an empty-string default rather than being required.
+      function isValidProfileFields() {
+        let data = request.resource.data;
+        let year = data.get("yearOfStudy", "");
+        let major = data.get("major", "");
+
+        return year in ["", "Year 1", "Year 2", "Year 3",
+                        "Year 4", "Masters", "PhD"]
+          && major is string
+          && major.size() <= 60;
+      }
+
       allow read: if isVerifiedNusUser();
 
       allow create: if hasNusEmail()
@@ -41,17 +56,19 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(
              ["name", "email", "createdAt"])
         && request.resource.data.keys().hasOnly(
-             ["name", "email", "createdAt"])
+             ["name", "email", "createdAt", "yearOfStudy", "major"])
         && request.resource.data.name is string
         && request.resource.data.email is string
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.createdAt == request.time
+        && isValidProfileFields();
 
       allow update: if isVerifiedNusUser()
         && request.auth.uid == userId
         && request.resource.data.diff(resource.data)
-             .affectedKeys().hasOnly(["name"])
-        && request.resource.data.name is string;
+             .affectedKeys().hasOnly(["name", "yearOfStudy", "major"])
+        && request.resource.data.name is string
+        && isValidProfileFields();
 
       allow delete: if isVerifiedNusUser()
         && request.auth.uid == userId;

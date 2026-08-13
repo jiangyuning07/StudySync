@@ -75,8 +75,8 @@ function pickTopKey(counts) {
 
 // A session is only worth recommending if the user could actually act on it:
 // still active, not their own, not already joined, and not full.
-export function isRecommendable(session, uid) {
-  if (isInactive(session)) return false;
+export function isRecommendable(session, uid, now = new Date()) {
+  if (isInactive(session, now)) return false;
   if (session.creatorId === uid) return false;
 
   const participants = session.participants || [];
@@ -128,7 +128,7 @@ export function recommendSessions(sessions, profile, uid, options = {}) {
   const {limit = 3, now = new Date()} = options;
 
   const eligible = (sessions || []).filter((session) =>
-    isRecommendable(session, uid)
+    isRecommendable(session, uid, now)
   );
 
   const hasHistory = profile.attendedCount > 0;

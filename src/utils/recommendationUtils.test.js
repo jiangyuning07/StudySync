@@ -71,23 +71,23 @@ describe("buildUserProfile", () => {
 
 describe("isRecommendable", () => {
   it("accepts an open active session the user has not joined", () => {
-    expect(isRecommendable(makeSession(), "me")).toBe(true);
+    expect(isRecommendable(makeSession(), "me", NOW)).toBe(true);
   });
 
   it("rejects the user's own session", () => {
-    expect(isRecommendable(makeSession({creatorId: "me", participants: ["me"]}), "me")).toBe(false);
+    expect(isRecommendable(makeSession({creatorId: "me", participants: ["me"]}), "me", NOW)).toBe(false);
   });
 
   it("rejects a session the user already joined", () => {
-    expect(isRecommendable(makeSession({participants: ["host", "me"]}), "me")).toBe(false);
+    expect(isRecommendable(makeSession({participants: ["host", "me"]}), "me", NOW)).toBe(false);
   });
 
   it("rejects a full session", () => {
-    expect(isRecommendable(makeSession({maxParticipants: 2, participants: ["host", "other"]}), "me")).toBe(false);
+    expect(isRecommendable(makeSession({maxParticipants: 2, participants: ["host", "other"]}), "me", NOW)).toBe(false);
   });
 
   it("rejects a cancelled session", () => {
-    expect(isRecommendable(makeSession({status: "Cancelled"}), "me")).toBe(false);
+    expect(isRecommendable(makeSession({status: "Cancelled"}), "me", NOW)).toBe(false);
   });
 });
 

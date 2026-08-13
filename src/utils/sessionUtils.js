@@ -13,13 +13,13 @@ export function isValidNusModuleCode(moduleCode) {
   return normalizedCode === "" || NUS_MODULE_CODE_PATTERN.test(normalizedCode);
 }
 
-export function isExpired(session) {
+export function isExpired(session, now = new Date()) {
   const sessionEnd = new Date(`${session.date}T${session.endTime}`);
-  return sessionEnd < new Date();
+  return sessionEnd < now;
 }
 
-export function isInactive(session) {
-  return session.status === "Cancelled" || isExpired(session);
+export function isInactive(session, now = new Date()) {
+  return session.status === "Cancelled" || isExpired(session, now);
 }
 
 export function getDisplayStatus(session) {

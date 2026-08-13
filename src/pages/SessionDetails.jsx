@@ -308,6 +308,14 @@ function SessionDetails() {
               <li key={participant.uid} className="participant-item">
                 <span className="participant-name participant-name-with-badge">
                   {participant.name || "Unnamed participant"}
+                  {(participant.yearOfStudy || participant.major) && (
+                  <span className="participant-meta">
+                    {[participant.yearOfStudy, participant.major]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                )}
+                
                   {isParticipantSessionOwner && (
                     <span className="participant-owner-badge">Owner</span>
                   )}
